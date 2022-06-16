@@ -40,7 +40,6 @@ class TerminalActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         val currTime = System.currentTimeMillis()
- //
 
         terminalViewModel.getCurrLines(currTime).observe(this) {
                 lines -> lines.let{
