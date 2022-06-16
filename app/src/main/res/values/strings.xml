@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">reactive x starfang</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+
+    <!-- Preference Titles -->
+    <string name="terminal_header">Terminal</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Terminal Preferences -->
+    <string name="signature_default">starfang</string>
+    <string name="signature_title">Your signature</string>
+    <string name="host_title">Host name</string>
+    <string name="host_default">M1Pro</string>
+    <string name="placeholder_title">Placeholder</string>
+    <string name="placeholder_default">{0} @ {1} : {2}</string>
+    <string name="directory_default">~</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+</resources>
