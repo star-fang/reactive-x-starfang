@@ -1,0 +1,10 @@
+{
+  "TestModel": [
+    {
+      "id": 0,
+      "value": "zero",
+      "values": ["a","b","c"],
+      "extra": "extra0"
+    }
+  ]
+}

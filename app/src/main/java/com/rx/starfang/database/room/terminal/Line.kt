@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room
+package com.rx.starfang.database.room.terminal
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

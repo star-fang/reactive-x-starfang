@@ -1,11 +1,8 @@
 package com.rx.starfang.ui.list.adapter
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.res.Resources
 import android.icu.text.MessageFormat
-import android.preference.PreferenceManager
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.rx.starfang.R
 import com.rx.starfang.TerminalActivity
-import com.rx.starfang.database.room.Line
+import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.databinding.RowEditLineBinding
 import com.rx.starfang.databinding.RowLineBinding
 
@@ -41,7 +38,7 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
         lateinit var titleView: AppCompatTextView
         lateinit var messageView: AppCompatTextView
         private val rss: Resources = binding.root.resources
-        open fun bind(line:Line) {
+        open fun bind(line: Line) {
             if(binding is RowLineBinding) {
                 titleView = binding.textLineTitle
                 messageView = binding.textAnswer
@@ -51,10 +48,12 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
                 titleView = binding.textLineTitle
                 messageView = binding.textAnswer
                 binding.textEditCommand.setOnKeyListener(View.OnKeyListener{v, keyCode, evt ->
+                    v as AppCompatEditText
                     if( keyCode == KeyEvent.KEYCODE_ENTER && evt.action == KeyEvent.ACTION_UP) {
                         val intent = Intent()
                         intent.action = TerminalActivity.ACTION_ADD_LINE
-                        intent.putExtra(TerminalActivity.EXTRAS_ADD_LINE_COMMAND, (v as AppCompatEditText).text.toString())
+                        intent.putExtra(TerminalActivity.EXTRAS_ADD_LINE_COMMAND, v.text.toString())
+                        v.setText("")
                         intent.putExtra(TerminalActivity.EXTRAS_ADD_LINE_ID, line.id)
                         binding.root.context.sendBroadcast(intent)
                         return@OnKeyListener true
@@ -66,7 +65,7 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
             val user = rss.getString(R.string.signature_default)
             val host = rss.getString(R.string.host_default)
             val placeholder = rss.getString(R.string.placeholder_default)
-            titleView.text = placeholder.let { MessageFormat.format(it, user, host) }
+            titleView.text = placeholder.let { MessageFormat.format(it, user, host, line.id) }
             messageView.text = line.message
         }
     }

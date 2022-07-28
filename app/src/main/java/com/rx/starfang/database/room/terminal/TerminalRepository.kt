@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room
+package com.rx.starfang.database.room.terminal
 
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +11,12 @@ class TerminalRepository(private val lineDao: LineDao) {
     suspend fun updateCommand(id:Long, command:String?) {
         lineDao.updateCommand(id, command)
     }
+
+    @WorkerThread
+    suspend fun updateMessage(id: Long, message: String?) {
+        lineDao.updateMessage(id, message)
+    }
+
     @WorkerThread
     suspend fun insert(line: Line) {
         lineDao.addLine(line)

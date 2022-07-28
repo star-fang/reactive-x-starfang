@@ -14,8 +14,6 @@
     <string name="host_default">M1Pro</string>
     <string name="placeholder_title">Placeholder</string>
     <string name="placeholder_default">{0} @ {1} : {2}</string>
-    <string name="directory_default">~</string>
-    <string name="reply_title">Default reply action</string>
 
     <!-- Sync Preferences -->
     <string name="sync_title">Sync email periodically</string>

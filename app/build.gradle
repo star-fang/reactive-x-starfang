@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    //id 'io.realm.kotlin'
 }
 
 android {
@@ -23,6 +24,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     java {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -33,6 +35,8 @@ android {
             jvmTarget = "11"
         }
     }
+
+
     namespace 'com.rx.starfang'
     buildFeatures {
         viewBinding true
@@ -43,11 +47,19 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
+
+    implementation 'com.google.code.gson:gson:2.8.9'
+    //implementation "io.realm.kotlin:library-base:$rootProject.realmKotlinVersion"
+    implementation "io.reactivex.rxjava3:rxandroid:$rootProject.rxAndroidVersion"
+    implementation "io.reactivex.rxjava3:rxkotlin:$rootProject.rxJavaVersion"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.coroutines"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.coroutines"
 
+    kapt "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0"
     // Room components
+    implementation "androidx.room:room-rxjava3:$rootProject.roomVersion"
     implementation "androidx.room:room-ktx:$rootProject.roomVersion"
+    implementation "androidx.room:room-runtime:$rootProject.roomVersion"
     kapt "androidx.room:room-compiler:$rootProject.roomVersion"
     androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
 
