@@ -18,7 +18,7 @@ class TerminalRepository(private val lineDao: LineDao) {
     }
 
     @WorkerThread
-    suspend fun insert(line: Line) {
+    suspend fun insertLine(line: Line) {
         lineDao.addLine(line)
     }
 }

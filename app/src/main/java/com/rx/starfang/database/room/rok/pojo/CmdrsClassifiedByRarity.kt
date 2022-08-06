@@ -1,15 +1,15 @@
-package com.rx.starfang.database.room.rok.relations.one_to_one
+package com.rx.starfang.database.room.rok.pojo
 
 import androidx.room.Embedded
 import androidx.room.Relation
 import com.rx.starfang.database.room.rok.source.Commander
 import com.rx.starfang.database.room.rok.source.Rarity
 
-data class RarityAndCmdr(
+data class CmdrsClassifiedByRarity(
     @Embedded val rarity: Rarity,
     @Relation(
-        parentColumn = "rarityId",
+        parentColumn = "id",
         entityColumn = "rarityId"
     )
-    val cmdr: Commander
+    val cmdrs: List<Commander>
 )

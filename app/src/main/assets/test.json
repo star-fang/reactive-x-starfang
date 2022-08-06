@@ -1,9 +1,15 @@
 {
   "TestModel": [
     {
-      "id": 0,
-      "value": "zero",
-      "values": ["a","b","c"],
+      "id": 999,
+      "name": "zero",
+      "list": ["a","b","c"],
+      "listOfList": [[1,2,3],[5,3,2],[2]],
+      "obj": {
+        "s1": "s1s1s1",
+        "s2": "s2s2s2",
+        "vv": 333
+      },
       "extra": "extra0"
     }
   ]

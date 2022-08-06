@@ -4,6 +4,7 @@ import androidx.room.Entity
 
 @Entity(primaryKeys = ["cmdrId", "talentId"])
 data class CmdrTalentCrossRef(
+    // 'CmdrAllInclusive.kt
     val cmdrId: Long,
     val talentId: Long
 )

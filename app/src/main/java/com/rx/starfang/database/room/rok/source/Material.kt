@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Material(
-    @PrimaryKey val matlId: Long,
-    val typeId: Long?, // todo make specifications
-    val rarityId: Long?,
+    @PrimaryKey val id: Long,
+    val typeId: Long?, // 'MaterialAllInclusive.kt'
+    val rarityId: Long?, // 'MaterialAllInclusive.kt'
     val seconds: Int?
 )

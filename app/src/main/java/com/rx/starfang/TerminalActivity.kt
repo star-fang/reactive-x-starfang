@@ -11,7 +11,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
+import com.rx.starfang.database.room.test.TestModel
 import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.databinding.ActivityTerminalBinding
 import com.rx.starfang.ui.list.adapter.LineAdapter
@@ -23,6 +28,12 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.lang.Exception
+import java.lang.IllegalStateException
+import java.lang.reflect.Type
+import java.util.*
+import kotlin.collections.HashSet
+import kotlin.reflect.KClass
 
 class TerminalActivity : AppCompatActivity() {
 
@@ -37,7 +48,10 @@ class TerminalActivity : AppCompatActivity() {
     }
 
     private val terminalViewModel: TerminalViewModel by viewModels {
-        TerminalViewModelFactory((application as RxStarfangApp).terminalRepository)
+        TerminalViewModelFactory(
+            (application as RxStarfangApp).terminalRepository,
+            (application as RxStarfangApp).rokRepository
+        )
     }
 
     fun cmdTask(id: Long, command: String?) {
@@ -46,8 +60,8 @@ class TerminalActivity : AppCompatActivity() {
                 CMD_NOTIFICATION -> "notification setting activity launched"
                 CMD_CONNECTION -> {
                     //"RoK_FangDB_4.0.json"
-                    getJsonFromAsset(this, "test.json")?.let {
-                        serializeRealmObject(it)
+                    getJsonFromAsset(this, "RoK_FangDB.json")?.run {
+                        jsonToDatabase(this)
                     }
                     "null"
                 }
@@ -121,31 +135,18 @@ class TerminalActivity : AppCompatActivity() {
         }
     }
 
-    /*
-    private fun searchObjectClazzByTableName(, tableName: String): KClass<out RealmObject>? {
-        val clazzName = tableName.split("_")
-            .joinToString("") { it.replaceFirstChar { c: Char -> c.uppercase() } }
-        if( realm.schema()[clazzName] != null ) {
-            Log.d("realm test", "class found:${clazzName}")
-            try {
-                return Class.forName("com.rx.starfang.database.realm.model.${clazzName}").asSubclass(RealmObject::class.java).kotlin
-            } catch (e:ClassNotFoundException) {}
+
+    private fun createOrUpdateData(clazz: Class<*>, tuple: JSONObject, gson: Gson) {
+        try {
+            var testObj = gson.fromJson(tuple.toString(), clazz)
+            terminalViewModel.insertRokEntity(clazz.kotlin, testObj)
+        } catch (e: Exception) {
+            Log.e("test~", e.message.toString())
         }
-        return null
-    }
-     */
 
-    data class DataTestModel (
-        var id: Int = 0,
-        var value: String? = null,
-        val values: List<String>
-    )
+        //Log.d("test~", "data entity created:${testObj}")
 
-    private fun createOrUpdateRealmObject(tuple: JSONObject, gson: Gson ) {
-        val companyType = object : TypeToken<DataTestModel>(){}.type
-        val gson = Gson()
-        var testObj: DataTestModel = gson.fromJson(tuple.toString(), DataTestModel::class.java)
-        Log.d("realm test", "realm object created:${testObj}")
+
         /*
         realm.writeBlocking {
             copyToRealm(realmObject.newInstance(), UpdatePolicy.ALL)
@@ -216,13 +217,13 @@ class TerminalActivity : AppCompatActivity() {
          */
     }
 
-    private fun serializeRealmObject(jsonString: String): String {
+    private fun jsonToDatabase(jsonString: String): String {
 
-        val gsonBuilder = GsonBuilder()
-            .setExclusionStrategies(object :ExclusionStrategy {
-                override fun shouldSkipField(f: FieldAttributes?): Boolean {
-                    if (f != null) {
-                        return f.declaredClass == String::class.java
+        val gson = GsonBuilder()
+            .setExclusionStrategies(object : ExclusionStrategy {
+                override fun shouldSkipField(field: FieldAttributes?): Boolean {
+                    if (field != null) {
+                        return field.name.contains("_ignore")
                     }
                     return false
                 }
@@ -230,28 +231,72 @@ class TerminalActivity : AppCompatActivity() {
                 override fun shouldSkipClass(clazz: Class<*>?): Boolean {
                     return false
                 }
-            })
-        //gsonBuilder.registerTypeAdapter(
-        //    LanguagePack::class.java,
-         //   LanguagePackDeserializer()
-       // )
-        val gson = gsonBuilder.create()
+            }).registerTypeAdapter(object: TypeToken<Boolean>(){}.type, BooleanDeserializer()).create()
 
         val json = JSONObject(jsonString)
         if (json.has("Version")) {
             json.remove("Version")
         }
 
-        json.keys().forEach { tableName ->
-            val tableData = json[tableName]
-            if (tableData is JSONArray && tableName == "TestModel") {
-            }
 
+
+        json.keys().forEach { modelName ->
+            searchDataClazzByTableName(modelName)?.run {
+                val tableData: JSONArray = json[modelName] as JSONArray
+                for (i in 0 until tableData.length()) {
+                    val tuple: JSONObject = tableData.getJSONObject(i)
+                    createOrUpdateData(this, tuple, gson)
+                }
+            }
         }
         return "read!"
     }
 
-    /*
+    private fun searchDataClazzByTableName(tableName: String): Class<*>? {
+        val clazzName = tableName.split("_")
+            .joinToString("") { it.replaceFirstChar { c: Char -> c.uppercase() } }
+
+        return try {
+            if (clazzName.length > 8 && clazzName.takeLast(8) == "CrossRef")
+                Class.forName("com.rx.starfang.database.room.rok.cross_ref.${clazzName}")
+            else
+                Class.forName("com.rx.starfang.database.room.rok.source.${clazzName}")
+        } catch (e: ClassNotFoundException) {
+            null
+        }
+    }
+
+    class BooleanDeserializer : JsonDeserializer<Boolean> {
+
+        companion object {
+            @JvmStatic lateinit var TRUE_STRINGS : HashSet<String>
+        }
+
+        init {
+            TRUE_STRINGS = HashSet(listOf("true", "1", "yes"))
+        }
+        override fun deserialize(
+            json: JsonElement?,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): Boolean {
+            json?.run {
+                return if(asJsonPrimitive.isBoolean)
+                    asJsonPrimitive.asBoolean
+                else if(asJsonPrimitive.isNumber)
+                    asJsonPrimitive.asNumber.toInt() > 0
+                else if(asJsonPrimitive.isString)
+                    TRUE_STRINGS.contains(asJsonPrimitive.asString.lowercase())
+                else
+                    false
+            }
+            return false
+        }
+
+    }
+}
+
+/*
     class LanguagePackDeserializer: JsonDeserializer<LanguagePack> {
         override fun deserialize(
             json: JsonElement?,
@@ -263,6 +308,3 @@ class TerminalActivity : AppCompatActivity() {
 
     }
      */
-
-
-}

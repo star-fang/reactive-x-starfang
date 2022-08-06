@@ -2,6 +2,7 @@ package com.rx.starfang
 
 import android.app.Application
 import com.rx.starfang.database.room.StarfangRoomDatabase
+import com.rx.starfang.database.room.rok.RokRepository
 import com.rx.starfang.database.room.terminal.TerminalRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -11,6 +12,8 @@ class RxStarfangApp : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob())
     private val roomDatabase by lazy { StarfangRoomDatabase.getDatabase(this, applicationScope)}
     val terminalRepository by lazy { TerminalRepository(roomDatabase.terminalDao()) }
+    val rokRepository by lazy { RokRepository(
+         roomDatabase.cmdrDao())}
 
     override fun onCreate() {
         super.onCreate()

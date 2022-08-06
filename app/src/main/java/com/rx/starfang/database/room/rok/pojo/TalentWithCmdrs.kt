@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.relations.many_to_many
+package com.rx.starfang.database.room.rok.pojo
 
 import androidx.room.Embedded
 import androidx.room.Junction
@@ -10,8 +10,12 @@ import com.rx.starfang.database.room.rok.cross_ref.CmdrTalentCrossRef
 data class TalentWithCmdrs(
     @Embedded val talent: Talent,
     @Relation(
-        parentColumn = "talentId",
-        entityColumn = "cmdrId",
-        associateBy = Junction(CmdrTalentCrossRef::class)
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            value = CmdrTalentCrossRef::class,
+            parentColumn = "talentId",
+            entityColumn = "cmdrId",
+            )
     ) val cmdrs: List<Commander>
 )
