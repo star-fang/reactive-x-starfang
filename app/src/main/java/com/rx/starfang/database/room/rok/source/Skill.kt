@@ -1,8 +1,10 @@
 package com.rx.starfang.database.room.rok.source
 
+import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.rx.starfang.database.room.rok.LanguagePack
+import com.rx.starfang.database.room.rok.RokBaseDao
 
 @Entity
 data class Skill(
@@ -16,3 +18,6 @@ data class Skill(
     var coefficient: List<List<Double>>?,
     var cmdrId: Long? // 'CmdrAllInclusive.kt', 'CmdrWithSkills.kt'
 )
+
+@Dao
+interface SkillDao: RokBaseDao<Skill>

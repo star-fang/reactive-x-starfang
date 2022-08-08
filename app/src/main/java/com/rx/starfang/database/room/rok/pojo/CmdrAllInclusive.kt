@@ -10,7 +10,7 @@ data class CmdrAllInclusive (
         parentColumn = "id",
         entityColumn = "cmdrId"
     )
-    val skills: List<Skill>,
+    val skills: List<Skill>?,
 
     @Relation( // m:n
         parentColumn = "id",
@@ -21,24 +21,24 @@ data class CmdrAllInclusive (
             parentColumn = "cmdrId",
             entityColumn = "talentId"
         )
-    ) val talents: List<Talent>,
+    ) val talents: List<Talent>?,
 
     @Relation( // 1:1
         parentColumn = "civId",
         entityColumn = "id"
     )
-    val civ: Civilization,
+    val civ: Civilization?,
 
     @Relation( // 1:1
         parentColumn = "rarityId",
         entityColumn = "id"
     )
-    val rarity: Rarity,
+    val rarity: Rarity?,
 
     @Relation( // 1:1
         parentColumn = "relicId",
         entity = Relic::class,
         entityColumn = "id",
     )
-    val relic: RelicWithAttrs
+    val relic: RelicWithAttrs?
 )

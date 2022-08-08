@@ -11,12 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.*
-import com.google.gson.annotations.JsonAdapter
 import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonToken
-import com.google.gson.stream.JsonWriter
-import com.rx.starfang.database.room.test.TestModel
 import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.databinding.ActivityTerminalBinding
 import com.rx.starfang.ui.list.adapter.LineAdapter
@@ -29,9 +24,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.lang.Exception
-import java.lang.IllegalStateException
 import java.lang.reflect.Type
-import java.util.*
 import kotlin.collections.HashSet
 import kotlin.reflect.KClass
 
@@ -61,16 +54,22 @@ class TerminalActivity : AppCompatActivity() {
                 CMD_CONNECTION -> {
                     //"RoK_FangDB_4.0.json"
                     getJsonFromAsset(this, "RoK_FangDB.json")?.run {
-                        jsonToDatabase(this)
+                        return@fromCallable jsonToDatabase(this)
+
                     }
-                    "null"
+                    "abc"
+                }
+                "테스트" -> {
+                    terminalViewModel.showCommander(id, "항우")
                 }
                 else -> "?"
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                terminalViewModel.updateMessage(id, it)
+                when(it) {
+                    is String -> terminalViewModel.updateMessage(id, it)
+                }
             }
 
     }
@@ -138,8 +137,8 @@ class TerminalActivity : AppCompatActivity() {
 
     private fun createOrUpdateData(clazz: Class<*>, tuple: JSONObject, gson: Gson) {
         try {
-            var testObj = gson.fromJson(tuple.toString(), clazz)
-            terminalViewModel.insertRokEntity(clazz.kotlin, testObj)
+            val testObj = gson.fromJson(tuple.toString(), clazz)
+            terminalViewModel.insertRokEntity(testObj, clazz.kotlin)
         } catch (e: Exception) {
             Log.e("test~", e.message.toString())
         }

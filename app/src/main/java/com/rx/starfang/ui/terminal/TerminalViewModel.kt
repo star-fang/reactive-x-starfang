@@ -1,6 +1,5 @@
 package com.rx.starfang.ui.terminal
 
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.rx.starfang.database.room.rok.RokRepository
@@ -9,7 +8,7 @@ import com.rx.starfang.database.room.terminal.TerminalRepository
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
-class TerminalViewModel(private val terminalRepo: TerminalRepository, private val rokRepo: RokRepository): ViewModel() {
+class TerminalViewModel(private val terminalRepo: TerminalRepository, val rokRepo: RokRepository): ViewModel() {
     val allLines: LiveData<List<Line>> = terminalRepo.allLines.asLiveData()
     fun getCurrLines(time:Long) = terminalRepo.getCurrLines(time).asLiveData()
 
@@ -25,8 +24,12 @@ class TerminalViewModel(private val terminalRepo: TerminalRepository, private va
         terminalRepo.insertLine(line)
     }
 
-    fun<T: Any> insertRokEntity(clazz: KClass<T>, entity: Any) = viewModelScope.launch {
-        rokRepo.insertEntity(clazz, entity)
+    fun insertRokEntity(entity: Any, clazz: KClass<*>) = viewModelScope.launch {
+        rokRepo.insertEntity(entity, clazz)
+    }
+
+    fun showCommander(id:Long, name: String) = viewModelScope.launch {
+        terminalRepo.updateMessage(id, rokRepo.showCommander(name))
     }
 }
 

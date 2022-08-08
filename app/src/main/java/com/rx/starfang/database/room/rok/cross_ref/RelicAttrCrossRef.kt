@@ -1,6 +1,8 @@
 package com.rx.starfang.database.room.rok.cross_ref
 
+import androidx.room.Dao
 import androidx.room.Entity
+import com.rx.starfang.database.room.rok.RokBaseDao
 
 @Entity(primaryKeys = ["relicId", "attrId"])
 data class RelicAttrCrossRef (
@@ -9,3 +11,6 @@ data class RelicAttrCrossRef (
     val attrId: Long,
     val attrValues: List<Double>?
     )
+
+@Dao
+interface RelicAttrXRefDao: RokBaseDao<RelicAttrCrossRef>

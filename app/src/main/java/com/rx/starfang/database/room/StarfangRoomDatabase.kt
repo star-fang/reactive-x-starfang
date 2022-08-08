@@ -16,41 +16,71 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [
-    Line::class
-    , Attribute::class
-    , Civilization::class
-    , Commander::class
-    , Equipment::class
-    , EquipmentSet::class
-    , EquipmentSlot::class
-    , Material::class
-    , MaterialType::class
-    , Rarity::class
-    , Relic::class
-    , Skill::class
-    , SpecialUnit::class
-    , Talent::class
-    , Unit::class
-    , UnitType::class
-    , CivAttrCrossRef::class
-    , CmdrTalentCrossRef::class
-    , EqptAttrCrossRef::class
-    , EqptMatlCrossRef::class
-    , EqptSetAttrCrossRef::class
-    , RelicAttrCrossRef::class
-    //, TestModel::class
-                     ]
-    , version =  1)
+@Database(
+    entities = [
+        Line::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, Unit::class, UnitType::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class
+        //, TestModel::class
+    ], version = 1
+)
 @TypeConverters(RokTypeConverter::class)
 abstract class StarfangRoomDatabase : RoomDatabase() {
 
     abstract fun terminalDao(): LineDao
+    abstract fun attrDao(): AttrDao
+    abstract fun civDao(): CivDao
     abstract fun cmdrDao(): CmdrDao
+    abstract fun eqptDao(): EqptDao
+    abstract fun eqptSetDao(): EqptSetDao
+    abstract fun eqptSlotDao(): EqptSlotDao
+    abstract fun matlDao(): MatlDao
+    abstract fun matlTypeDao(): MatlTypeDao
+    abstract fun rarityDao(): RarityDao
+    abstract fun relicDao(): RelicDao
+    abstract fun skillDao(): SkillDao
+    abstract fun specialUnitDao(): SpecialUnitDao
+    abstract fun talentDao(): TalentDao
+    abstract fun unitDao(): UnitDao
+    abstract fun unitTypeDao(): UnitTypeDao
+    abstract fun civAttrXRefDao(): CivAttrXRefDao
+    abstract fun cmdrTalentXRefDao(): CmdrTalentXRefDao
+    abstract fun eqptAttrXRefDao(): EqptAttrXRefDao
+    abstract fun eqptMatlXRefDao(): EqptMatlXRefDao
+    abstract fun eqptSetAttrXRefDao(): EqptSetAttrXRefDao
+    abstract fun relicAttrXRefDao(): RelicAttrXRefDao
+
+    fun rokDaoMap(): HashMap<Any, Any> {
+        return HashMap(
+            mapOf(
+                Attribute::class to attrDao(),
+                Civilization::class to civDao(),
+                Commander::class to cmdrDao(),
+                Equipment::class to eqptDao(),
+                EquipmentSet::class to eqptSetDao(),
+                EquipmentSlot::class to eqptSlotDao(),
+                Material::class to matlDao(),
+                MaterialType::class to matlTypeDao(),
+                Rarity::class to rarityDao(),
+                Relic::class to relicDao(),
+                Skill::class to skillDao(),
+                SpecialUnit::class to specialUnitDao(),
+                Talent::class to talentDao(),
+                Unit::class to unitDao(),
+                UnitType::class to unitTypeDao(),
+                CivAttrCrossRef::class to civAttrXRefDao(),
+                CmdrTalentCrossRef::class to cmdrTalentXRefDao(),
+                EqptAttrCrossRef::class to eqptAttrXRefDao(),
+                EqptMatlCrossRef::class to eqptMatlXRefDao(),
+                EqptSetAttrCrossRef::class to eqptSetAttrXRefDao(),
+                RelicAttrCrossRef::class to relicAttrXRefDao()
+
+            )
+        )
+    }
 
     companion object {
         @Volatile
         private var INSTANCE: StarfangRoomDatabase? = null
+
 
         fun getDatabase(
             context: Context,
@@ -79,9 +109,6 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
                     scope.launch(Dispatchers.IO) {
                         val lineDao = database.terminalDao()
                         lineDao.deleteAll()
-
-                        val cmdrDao = database.cmdrDao()
-
 
 
                     }

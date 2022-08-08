@@ -12,12 +12,13 @@ class RxStarfangApp : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob())
     private val roomDatabase by lazy { StarfangRoomDatabase.getDatabase(this, applicationScope)}
     val terminalRepository by lazy { TerminalRepository(roomDatabase.terminalDao()) }
-    val rokRepository by lazy { RokRepository(
-         roomDatabase.cmdrDao())}
+    val rokRepository by lazy { RokRepository(roomDatabase.rokDaoMap()) }
 
+    /*
     override fun onCreate() {
         super.onCreate()
-        /*
+
+
         val realmConfig = RealmConfiguration
             .Builder(schema = setOf(Attribute::class, Civilization::class, Commander::class, Gain::class, LanguagePack::class, Rarity::class, Skill::class, Specification::class, Unit::class, UnitSpec::class, TestModel::class))
             .name("rx.starfang.realm")
@@ -40,8 +41,9 @@ class RxStarfangApp : Application() {
                 }
             }).build()
         realm = Realm.open(realmConfig)
-         */
+
     }
+     */
 
 
 }

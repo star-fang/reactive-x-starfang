@@ -12,6 +12,7 @@ task clean(type: Delete) {
 }
 
 ext {
+    kotlinVersion = '1.7.10'
     rxAndroidVersion = '3.0.0'
     rxJavaVersion = '3.0.1'
     //realmKotlinVersion = '1.0.0'

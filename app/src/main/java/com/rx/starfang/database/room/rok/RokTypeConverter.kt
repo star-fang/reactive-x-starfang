@@ -7,28 +7,36 @@ import com.google.gson.Gson
 @ProvidedTypeConverter
 class RokTypeConverter {
     @TypeConverter
-    fun listOfDoublesToJson(value: List<List<Double>>): String? {
+    fun listOfDoublesToJson(value: List<List<Double>>?): String? {
         return Gson().toJson(value)
     }
 
     @TypeConverter
-    fun doublesToJson(value: List<Double>): String? {
+    fun doublesToJson(value: List<Double>?): String? {
         return Gson().toJson(value)
     }
 
     @TypeConverter
-    fun listToJson(value: List<String>): String? {
+    fun stringListToJson(value: List<String>?): String? {
         return Gson().toJson(value)
     }
 
     @TypeConverter
-    fun languagePackToJson(value: LanguagePack): String? {
+    fun languagePackToJson(value: LanguagePack?): String? {
         return Gson().toJson(value)
     }
 
     @TypeConverter
     fun jsonToListOfDoubles(json: String): List<List<Double>> {
-        return Gson().fromJson<List<List<Double>>>(json,Array<Array<Double>>::class.java).toList()
+        val resultList = mutableListOf<List<Double>>()
+        val gson = Gson()
+        val arr = gson.fromJson(json,Array<Array<Double>>::class.java)
+        arr?.run {
+            for (i in arr.indices) {
+                resultList.add(arr[i].toList())
+            }
+        }
+        return resultList
     }
 
     @TypeConverter
