@@ -12,10 +12,10 @@ interface LineDao {
     fun getLines(activityTime: Long): Flow<List<Line>>
 
     @Query("UPDATE lines SET command = :command WHERE id = :id")
-    suspend fun updateCommand(id:Long, command: String?)
+    suspend fun updateCommand(id:Long, command: String)
 
     @Query("UPDATE lines SET message = :message WHERE id = :id")
-    suspend fun updateMessage(id:Long, message: String?)
+    suspend fun updateMessage(id:Long, message: String)
 
     @Delete
     suspend fun deleteLine(line: Line)

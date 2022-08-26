@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.rx.starfang.database.room.rok.RokSearchDao
 import com.rx.starfang.database.room.rok.RokTypeConverter
 import com.rx.starfang.database.room.rok.cross_ref.*
 import com.rx.starfang.database.room.rok.source.*
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 abstract class StarfangRoomDatabase : RoomDatabase() {
 
     abstract fun terminalDao(): LineDao
+    abstract fun rokSearchDao(): RokSearchDao
     abstract fun attrDao(): AttrDao
     abstract fun civDao(): CivDao
     abstract fun cmdrDao(): CmdrDao

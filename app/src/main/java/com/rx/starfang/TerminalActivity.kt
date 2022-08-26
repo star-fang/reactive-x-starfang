@@ -12,23 +12,27 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import com.rx.starfang.database.room.rok.nlp.RokLambda
 import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.databinding.ActivityTerminalBinding
 import com.rx.starfang.ui.list.adapter.LineAdapter
 import com.rx.starfang.ui.terminal.TerminalViewModel
 import com.rx.starfang.ui.terminal.TerminalViewModelFactory
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.lang.Exception
 import java.lang.reflect.Type
 import kotlin.collections.HashSet
-import kotlin.reflect.KClass
+import kotlin.coroutines.CoroutineContext
 
-class TerminalActivity : AppCompatActivity() {
+class TerminalActivity : AppCompatActivity(), CoroutineScope {
+
+    lateinit var job: Job
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
 
     private lateinit var binding: ActivityTerminalBinding
 
@@ -47,35 +51,38 @@ class TerminalActivity : AppCompatActivity() {
         )
     }
 
-    fun cmdTask(id: Long, command: String?) {
-        Observable.fromCallable {
-            return@fromCallable when (command) {
+    fun cmdTask(id: Long, command: String) {
+        launch {
+            when (command) {
                 CMD_NOTIFICATION -> "notification setting activity launched"
                 CMD_CONNECTION -> {
-                    //"RoK_FangDB_4.0.json"
-                    getJsonFromAsset(this, "RoK_FangDB.json")?.run {
-                        return@fromCallable jsonToDatabase(this)
+                    getJsonFromAsset(this@TerminalActivity, "RoK_FangDB.json")?.run {
+                         jsonToDatabase(this)
 
                     }
                     "abc"
                 }
                 "테스트" -> {
                     terminalViewModel.showCommander(id, "항우")
+                    null
                 }
-                else -> "?"
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                when(it) {
-                    is String -> terminalViewModel.updateMessage(id, it)
+                else -> {
+                    val sb = StringBuilder()
+                    RokLambda.process(command, "ㅇㅅㅇ", rokRepository = (application as RxStarfangApp).rokRepository)?.forEach {
+                        sb.append("\r\n--???-**--!-\r\n\r\n").append(it)
+                    }
+                    sb.toString()
                 }
+            }?.run {
+                terminalViewModel.updateMessage(id, this)
             }
 
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        job = Job()
         binding = ActivityTerminalBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -100,6 +107,7 @@ class TerminalActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        job.cancel()
         unregisterReceiver(editLineReceiver)
     }
 
@@ -110,13 +118,11 @@ class TerminalActivity : AppCompatActivity() {
             when (intent?.action) {
                 ACTION_ADD_LINE -> {
                     val command: String? = intent.extras?.getString(EXTRAS_ADD_LINE_COMMAND)
-                    intent.extras?.getLong(EXTRAS_ADD_LINE_ID)?.let {
-                        terminalViewModel.updateCommand(it, command)
-                        cmdTask(it, command)
+                    val lineId: Long? = intent.extras?.getLong(EXTRAS_ADD_LINE_ID)
+                    if( command != null && lineId != null) {
+                        terminalViewModel.updateCommand(lineId, command)
+                        cmdTask(lineId, command)
                     }
-
-
-
                     terminalViewModel.insert(Line(0, System.currentTimeMillis(), "", ""))
                 }
             }

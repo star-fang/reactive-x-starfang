@@ -21,6 +21,6 @@ data class Commander(
 interface CmdrDao: RokBaseDao<Commander> {
 
     @Transaction
-    @Query("SELECT * FROM Commander WHERE kor = :cmdrName")
+    @Query("SELECT * FROM Commander WHERE kor LIKE '%' || :cmdrName || '%'")
     suspend fun searchCmdrsByName(cmdrName: String): List<CmdrAllInclusive>
 }

@@ -8,15 +8,15 @@ import com.rx.starfang.database.room.terminal.TerminalRepository
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
-class TerminalViewModel(private val terminalRepo: TerminalRepository, val rokRepo: RokRepository): ViewModel() {
+class TerminalViewModel(private val terminalRepo: TerminalRepository, private val rokRepo: RokRepository): ViewModel() {
     val allLines: LiveData<List<Line>> = terminalRepo.allLines.asLiveData()
     fun getCurrLines(time:Long) = terminalRepo.getCurrLines(time).asLiveData()
 
-    fun updateCommand(id:Long, command:String?) = viewModelScope.launch {
+    fun updateCommand(id:Long, command:String) = viewModelScope.launch {
         terminalRepo.updateCommand(id, command)
     }
 
-    fun updateMessage(id:Long, message: String? ) = viewModelScope.launch {
+    fun updateMessage(id:Long, message: String ) = viewModelScope.launch {
         terminalRepo.updateMessage(id ,message)
     }
 
@@ -29,7 +29,11 @@ class TerminalViewModel(private val terminalRepo: TerminalRepository, val rokRep
     }
 
     fun showCommander(id:Long, name: String) = viewModelScope.launch {
-        terminalRepo.updateMessage(id, rokRepo.showCommander(name))
+        val sb = StringBuilder()
+        for( cmdrInfo in rokRepo.showCommander(name) ) {
+            sb.append("\r\n---------------\r\n").append(cmdrInfo)
+        }
+        terminalRepo.updateMessage(id, sb.toString())
     }
 }
 

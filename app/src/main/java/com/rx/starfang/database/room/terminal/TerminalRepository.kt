@@ -8,12 +8,12 @@ class TerminalRepository(private val lineDao: LineDao) {
     fun getCurrLines(currTime:Long) = lineDao.getLines(currTime)
 
     @WorkerThread
-    suspend fun updateCommand(id:Long, command:String?) {
+    suspend fun updateCommand(id:Long, command:String) {
         lineDao.updateCommand(id, command)
     }
 
     @WorkerThread
-    suspend fun updateMessage(id: Long, message: String?) {
+    suspend fun updateMessage(id: Long, message: String) {
         lineDao.updateMessage(id, message)
     }
 

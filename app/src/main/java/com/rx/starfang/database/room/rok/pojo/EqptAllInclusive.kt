@@ -21,14 +21,14 @@ data class EqptAllInclusive(
             parentColumn = "eqptId",
             entityColumn = "attrId"
         )
-    ) val attrs: List<Attribute>,
+    ) val attrs: List<Attribute>?,
 
     @Relation(
         parentColumn = "id",
         entity = EqptAttrCrossRef::class,
         entityColumn = "eqptId"
     )
-    val attrRefs: List<EqptAttrCrossRef>,
+    val attrRefs: List<EqptAttrCrossRef>?,
 
     @Relation( // m:n
         parentColumn = "id",
@@ -38,34 +38,34 @@ data class EqptAllInclusive(
             value = EqptMatlCrossRef::class,
             parentColumn = "eqptId",
             entityColumn = "matlId",)
-    ) val matls: List<MatlAllInclusive>,
+    ) val matls: List<MatlAllInclusive>?,
 
     @Relation(
         parentColumn = "id",
         entity = EqptMatlCrossRef::class,
         entityColumn = "eqptId"
     )
-    val matlRefs: List<EqptMatlCrossRef>,
+    val matlRefs: List<EqptMatlCrossRef>?,
 
     @Relation( // 1:1
         parentColumn = "slotId",
         entity = EquipmentSlot::class,
         entityColumn = "id"
     )
-    val slot: EquipmentSlot,
+    val slot: EquipmentSlot?,
 
     @Relation( // 1:1
         parentColumn = "rarityID",
         entity = Rarity::class,
         entityColumn = "id"
     )
-    val rarity: Rarity,
+    val rarity: Rarity?,
 
     @Relation( // 1:1
         parentColumn = "setId",
         entity = EqptSetWithAttrs::class,
         entityColumn = "id"
     )
-    val eqptSet: EqptSetWithAttrs
+    val eqptSet: EqptSetWithAttrs?
 
 )
