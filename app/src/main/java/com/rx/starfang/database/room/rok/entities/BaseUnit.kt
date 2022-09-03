@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.Dao
 import androidx.room.Entity
@@ -7,7 +7,7 @@ import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
 @Entity
-data class Unit (
+data class BaseUnit (
         @PrimaryKey val id: Long,
         var name: LanguagePack?,
         var typeId: Long, // "UnitsOfTypeA.kt"
@@ -21,4 +21,4 @@ data class Unit (
         )
 
 @Dao
-interface UnitDao: RokBaseDao<Unit>
+interface BaseUnitDao: RokBaseDao<BaseUnit>

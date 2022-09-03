@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
@@ -23,4 +23,8 @@ interface CmdrDao: RokBaseDao<Commander> {
     @Transaction
     @Query("SELECT * FROM Commander WHERE kor LIKE '%' || :cmdrName || '%'")
     suspend fun searchCmdrsByName(cmdrName: String): List<CmdrAllInclusive>
+
+    @Transaction
+    @Query("SELECT * FROM Commander WHERE id = :cmdrId")
+    suspend fun searchCmdrById(cmdrId: Long): CmdrAllInclusive?
 }

@@ -63,13 +63,13 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                     "abc"
                 }
                 "테스트" -> {
-                    terminalViewModel.showCommander(id, "항우")
                     null
                 }
                 else -> {
                     val sb = StringBuilder()
                     RokLambda.process(command, "ㅇㅅㅇ", rokRepository = (application as RxStarfangApp).rokRepository)?.forEach {
                         sb.append("\r\n--???-**--!-\r\n\r\n").append(it)
+
                     }
                     sb.toString()
                 }
@@ -265,7 +265,7 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
             if (clazzName.length > 8 && clazzName.takeLast(8) == "CrossRef")
                 Class.forName("com.rx.starfang.database.room.rok.cross_ref.${clazzName}")
             else
-                Class.forName("com.rx.starfang.database.room.rok.source.${clazzName}")
+                Class.forName("com.rx.starfang.database.room.rok.entities.${clazzName}")
         } catch (e: ClassNotFoundException) {
             null
         }

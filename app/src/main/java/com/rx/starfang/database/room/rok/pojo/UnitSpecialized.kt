@@ -2,14 +2,15 @@ package com.rx.starfang.database.room.rok.pojo
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.rx.starfang.database.room.rok.source.SpecialUnit
+import com.rx.starfang.database.room.rok.entities.BaseUnit
+import com.rx.starfang.database.room.rok.entities.SpecialUnit
 
 data class UnitSpecialized(
     @Embedded val unit: SpecialUnit,
     @Relation(
         parentColumn = "baseUnitId",
-        entity = UnitTyped::class,
+        entity = BaseUnit::class,
         entityColumn = "id"
     )
-    val baseUnit: UnitTyped?
+    val typedBaseUnit: UnitTyped?
 )

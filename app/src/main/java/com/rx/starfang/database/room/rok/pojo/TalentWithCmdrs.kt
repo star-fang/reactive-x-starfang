@@ -3,8 +3,8 @@ package com.rx.starfang.database.room.rok.pojo
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import com.rx.starfang.database.room.rok.source.Commander
-import com.rx.starfang.database.room.rok.source.Talent
+import com.rx.starfang.database.room.rok.entities.Commander
+import com.rx.starfang.database.room.rok.entities.Talent
 import com.rx.starfang.database.room.rok.cross_ref.CmdrTalentCrossRef
 
 data class TalentWithCmdrs(

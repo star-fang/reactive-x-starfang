@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.Dao
 import androidx.room.Entity

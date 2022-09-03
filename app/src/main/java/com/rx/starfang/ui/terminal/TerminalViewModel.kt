@@ -27,14 +27,6 @@ class TerminalViewModel(private val terminalRepo: TerminalRepository, private va
     fun insertRokEntity(entity: Any, clazz: KClass<*>) = viewModelScope.launch {
         rokRepo.insertEntity(entity, clazz)
     }
-
-    fun showCommander(id:Long, name: String) = viewModelScope.launch {
-        val sb = StringBuilder()
-        for( cmdrInfo in rokRepo.showCommander(name) ) {
-            sb.append("\r\n---------------\r\n").append(cmdrInfo)
-        }
-        terminalRepo.updateMessage(id, sb.toString())
-    }
 }
 
 class TerminalViewModelFactory(private val repository: TerminalRepository, private val rokRepo: RokRepository): ViewModelProvider.Factory {

@@ -4,8 +4,8 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.rx.starfang.database.room.rok.cross_ref.RelicAttrCrossRef
-import com.rx.starfang.database.room.rok.source.Attribute
-import com.rx.starfang.database.room.rok.source.Relic
+import com.rx.starfang.database.room.rok.entities.Attribute
+import com.rx.starfang.database.room.rok.entities.Relic
 
 data class RelicWithAttrs(
     @Embedded val relic: Relic,

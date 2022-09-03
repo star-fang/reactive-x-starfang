@@ -11,7 +11,7 @@ class RxStarfangApp : Application() {
 
     private val applicationScope = CoroutineScope(SupervisorJob())
     private val roomDatabase by lazy { StarfangRoomDatabase.getDatabase(this, applicationScope)}
-    val terminalRepository by lazy { TerminalRepository(roomDatabase.terminalDao()) }
+    val terminalRepository by lazy { TerminalRepository(roomDatabase.lineDao(), roomDatabase.memoDao()) }
     val rokRepository by lazy { RokRepository(roomDatabase.rokDaoMap(), roomDatabase.rokSearchDao()) }
 
     /*

@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.Dao
 import androidx.room.Entity
@@ -7,10 +7,11 @@ import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
 @Entity
-data class EquipmentSet(
+data class Rarity(
     @PrimaryKey val id: Long,
-    val name: LanguagePack
+    val name: LanguagePack?,
+    val value: Int
 )
 
 @Dao
-interface EqptSetDao: RokBaseDao<EquipmentSet>
+interface RarityDao: RokBaseDao<Rarity>

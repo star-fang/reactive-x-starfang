@@ -3,7 +3,7 @@ package com.rx.starfang.database.room.terminal
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.flow.Flow
 
-class TerminalRepository(private val lineDao: LineDao) {
+class TerminalRepository(private val lineDao: LineDao, private val memoDao: MemoDao) {
     val allLines: Flow<List<Line>> = lineDao.getLines(0)
     fun getCurrLines(currTime:Long) = lineDao.getLines(currTime)
 

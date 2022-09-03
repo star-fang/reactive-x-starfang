@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
@@ -20,5 +20,8 @@ data class Equipment(
 @Dao
 interface EqptDao: RokBaseDao<Equipment> {
     @Query("SELECT * FROM Equipment WHERE kor LIKE '%' || :eqptName || '%'")
-    suspend fun searchEqptByName(eqptName: String): List<EqptAllInclusive>
+    suspend fun searchEqptsByName(eqptName: String): List<EqptAllInclusive>
+
+    @Query("SELECT * FROM EQUIPMENT WHERE id = :eqptId")
+    suspend fun searchEqptById(eqptId: Long): EqptAllInclusive?
 }

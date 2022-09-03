@@ -1,10 +1,7 @@
 package com.rx.starfang.database.room.rok.nlp
 
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import com.rx.starfang.database.room.rok.RokRepository
-import com.rx.starfang.database.room.rok.source.CmdrDao
-import com.rx.starfang.services.ParcelableReplyAction
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.collections.HashMap
@@ -22,7 +19,7 @@ class RokLambda {
 
     companion object {
 
-        val debugTag = "rok_lambda"
+        private const val debugTag = "rok_lambda"
 
         private const val catCommand = "냥"
         private const val engCommand = "냥"
@@ -79,7 +76,7 @@ class RokLambda {
             return null
         }
 
-        suspend fun process(content: String, sendCat: String, rokRepository: RokRepository): List<String>?{
+        suspend fun process(content: String, sendCat: String, rokRepository: RokRepository): List<String?>?{
             var req = content
             val langNum: LangNum =
                 if(content.length > engCommand.length && content.substring(content.length - engCommand.length) == engCommand) {
@@ -101,18 +98,18 @@ class RokLambda {
             when(cmdNum) {
                 CmdNum.CIV -> {}
                 else -> {
-                    val skillLevel: Array<Int?>?
+                    var skillLevels: MutableList<Int>? = null
                     val skillLevelPattern = Pattern.compile("[0-9]{4}")
                     val skillLevelMatcher = skillLevelPattern.matcher(req)
                     if(skillLevelMatcher.find()) {
-                        skillLevel = arrayOfNulls(4)
-                        skillLevelMatcher.group(0)?.forEachIndexed {
-                            i, numChar -> skillLevel[i] = Character.getNumericValue(numChar)
+                        skillLevels = mutableListOf()
+                        skillLevelMatcher.group(0)?.forEach {
+                            numChar -> skillLevels.add(Character.getNumericValue(numChar))
                         }
                     }
 
                     Log.d(debugTag, "command: $req")
-                    return rokRepository.showCommander(req.replace("[0-9]".toRegex(),""))
+                    return rokRepository.searchEntities(req.replace("[0-9]".toRegex(),"").trim(), skillLevels)
 
                 }
             }

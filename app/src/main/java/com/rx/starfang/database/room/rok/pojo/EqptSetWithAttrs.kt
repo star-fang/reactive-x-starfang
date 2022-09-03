@@ -4,8 +4,8 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.rx.starfang.database.room.rok.cross_ref.EqptSetAttrCrossRef
-import com.rx.starfang.database.room.rok.source.Attribute
-import com.rx.starfang.database.room.rok.source.EquipmentSet
+import com.rx.starfang.database.room.rok.entities.Attribute
+import com.rx.starfang.database.room.rok.entities.EquipmentSet
 
 data class EqptSetWithAttrs(
     @Embedded val eqptSet: EquipmentSet,
@@ -19,12 +19,12 @@ data class EqptSetWithAttrs(
             entityColumn = "attrId"
             )
     )
-    val attrs: List<Attribute>,
+    val attrs: List<Attribute>?,
 
     @Relation(
         parentColumn = "id",
         entity = EqptSetAttrCrossRef::class,
         entityColumn = "eqptSetId"
     )
-    val attrRefs: List<EqptSetAttrCrossRef>
+    val attrRefs: List<EqptSetAttrCrossRef>?
 )

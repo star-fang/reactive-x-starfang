@@ -5,10 +5,7 @@ import androidx.room.Junction
 import androidx.room.Relation
 import com.rx.starfang.database.room.rok.cross_ref.EqptAttrCrossRef
 import com.rx.starfang.database.room.rok.cross_ref.EqptMatlCrossRef
-import com.rx.starfang.database.room.rok.source.Attribute
-import com.rx.starfang.database.room.rok.source.Equipment
-import com.rx.starfang.database.room.rok.source.EquipmentSlot
-import com.rx.starfang.database.room.rok.source.Rarity
+import com.rx.starfang.database.room.rok.entities.*
 
 data class EqptAllInclusive(
     @Embedded val eqpt: Equipment,
@@ -32,12 +29,12 @@ data class EqptAllInclusive(
 
     @Relation( // m:n
         parentColumn = "id",
-        entity = MatlAllInclusive::class,
+        entity = Material::class,
         entityColumn = "id",
         associateBy = Junction(
             value = EqptMatlCrossRef::class,
             parentColumn = "eqptId",
-            entityColumn = "matlId",)
+            entityColumn = "matlId")
     ) val matls: List<MatlAllInclusive>?,
 
     @Relation(
@@ -55,7 +52,7 @@ data class EqptAllInclusive(
     val slot: EquipmentSlot?,
 
     @Relation( // 1:1
-        parentColumn = "rarityID",
+        parentColumn = "rarityId",
         entity = Rarity::class,
         entityColumn = "id"
     )
@@ -63,9 +60,9 @@ data class EqptAllInclusive(
 
     @Relation( // 1:1
         parentColumn = "setId",
-        entity = EqptSetWithAttrs::class,
+        entity = EquipmentSet::class,
         entityColumn = "id"
     )
-    val eqptSet: EqptSetWithAttrs?
+    val eqptSet: EquipmentSet?
 
 )

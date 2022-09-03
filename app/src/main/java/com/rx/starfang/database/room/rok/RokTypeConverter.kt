@@ -57,7 +57,7 @@ class RokTypeConverter(val gson:Gson = Gson()) {
     }
 
     @TypeConverter
-    fun jsonToLanguagePack(json: String): LanguagePack {
+    fun jsonToLanguagePack(json: String): LanguagePack? {
         return gson.fromJson(json, LanguagePack::class.java)
     }
 }

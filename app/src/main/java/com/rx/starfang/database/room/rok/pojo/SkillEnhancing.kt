@@ -5,12 +5,19 @@ import androidx.room.Relation
 import com.rx.starfang.database.room.rok.entities.Commander
 import com.rx.starfang.database.room.rok.entities.Skill
 
-data class CmdrWithSkills(
-    @Embedded val cmdr: Commander,
+data class SkillEnhancing(
+    @Embedded val skill: Skill,
+    @Relation(
+        parentColumn = "enhanceTargetId",
+        entity = Skill::class,
+        entityColumn = "id"
+    )
+    val enhancedSkill: Skill?,
+
     @Relation(
         parentColumn = "id",
         entity = Skill::class,
-        entityColumn = "cmdrId"
+        entityColumn = "enhanceTargetId"
     )
-    val skills: List<SkillEnhancing>
+    val enhancingSkill: Skill?
 )

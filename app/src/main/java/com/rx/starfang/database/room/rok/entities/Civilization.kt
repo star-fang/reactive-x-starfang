@@ -1,11 +1,9 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
+import com.rx.starfang.database.room.rok.pojo.CivAllInclusive
 
 @Entity
 data class Civilization(
@@ -16,4 +14,8 @@ data class Civilization(
     )
 
 @Dao
-interface CivDao: RokBaseDao<Civilization>
+interface CivDao: RokBaseDao<Civilization> {
+
+    @Query("SELECT * FROM Civilization WHERE id = :civId")
+    suspend fun searchCivById(civId: Long): CivAllInclusive?
+}

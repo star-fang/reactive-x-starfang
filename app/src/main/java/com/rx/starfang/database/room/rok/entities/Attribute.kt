@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.source
+package com.rx.starfang.database.room.rok.entities
 
 import androidx.room.Dao
 import androidx.room.Entity
@@ -7,10 +7,10 @@ import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
 @Entity
-data class EquipmentSlot(
+data class Attribute(
     @PrimaryKey val id: Long,
-    val name: LanguagePack?
+    val form: LanguagePack?
 )
 
 @Dao
-interface EqptSlotDao: RokBaseDao<EquipmentSlot>
+interface AttrDao: RokBaseDao<Attribute>

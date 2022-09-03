@@ -2,15 +2,16 @@ package com.rx.starfang.database.room.rok.pojo
 
 import androidx.room.*
 import com.rx.starfang.database.room.rok.cross_ref.CmdrTalentCrossRef
-import com.rx.starfang.database.room.rok.source.*
+import com.rx.starfang.database.room.rok.entities.*
 
 data class CmdrAllInclusive (
     @Embedded val cmdr: Commander,
     @Relation(
         parentColumn = "id",
+        entity = Skill::class,
         entityColumn = "cmdrId"
     )
-    val skills: List<Skill>?,
+    val enhancingSkills: List<SkillEnhancing>?,
 
     @Relation( // m:n
         parentColumn = "id",

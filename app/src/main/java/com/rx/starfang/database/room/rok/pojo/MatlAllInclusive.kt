@@ -2,9 +2,9 @@ package com.rx.starfang.database.room.rok.pojo
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.rx.starfang.database.room.rok.source.Material
-import com.rx.starfang.database.room.rok.source.MaterialType
-import com.rx.starfang.database.room.rok.source.Rarity
+import com.rx.starfang.database.room.rok.entities.Material
+import com.rx.starfang.database.room.rok.entities.MaterialType
+import com.rx.starfang.database.room.rok.entities.Rarity
 
 data class MatlAllInclusive(
     @Embedded val matl: Material,
