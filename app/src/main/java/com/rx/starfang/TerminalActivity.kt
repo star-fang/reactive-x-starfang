@@ -12,12 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
-import com.rx.starfang.database.room.rok.nlp.RokLambda
-import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.databinding.ActivityTerminalBinding
 import com.rx.starfang.ui.list.adapter.LineAdapter
-import com.rx.starfang.ui.terminal.TerminalViewModel
-import com.rx.starfang.ui.terminal.TerminalViewModelFactory
+import com.rx.starfang.ui.model.TerminalViewModel
+import com.rx.starfang.ui.model.TerminalViewModelFactory
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -40,8 +38,9 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         const val ACTION_ADD_LINE = "ACTION_ADD_LINE"
         const val EXTRAS_ADD_LINE_ID = "EXTRAS_ADD_LINE_ID"
         const val EXTRAS_ADD_LINE_COMMAND = "EXTRAS_ADD_LINE_COMMAND"
-        const val CMD_NOTIFICATION = "알림"
-        const val CMD_CONNECTION = "연결"
+        const val CMD_NOTIFICATION = "/notification"
+        const val CMD_CONNECTION = "/connect"
+        const val CMD_TALK = "/talk"
     }
 
     private val terminalViewModel: TerminalViewModel by viewModels {
@@ -54,29 +53,18 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
     fun cmdTask(id: Long, command: String) {
         launch {
             when (command) {
-                CMD_NOTIFICATION -> "notification setting activity launched"
+                CMD_NOTIFICATION -> terminalViewModel.updateMessage(id,"notification setting activity launched")
                 CMD_CONNECTION -> {
-                    getJsonFromAsset(this@TerminalActivity, "RoK_FangDB.json")?.run {
+                    getJsonFromAsset(this@TerminalActivity)?.run {
                          jsonToDatabase(this)
 
                     }
-                    "abc"
+                    terminalViewModel.updateMessage(id,"abc")
                 }
-                "테스트" -> {
-                    null
+                CMD_TALK -> {
+                    startActivity(Intent(this@TerminalActivity, TalkActivity::class.java))
                 }
-                else -> {
-                    val sb = StringBuilder()
-                    RokLambda.process(command, "ㅇㅅㅇ", rokRepository = (application as RxStarfangApp).rokRepository)?.forEach {
-                        sb.append("\r\n--???-**--!-\r\n\r\n").append(it)
-
-                    }
-                    sb.toString()
-                }
-            }?.run {
-                terminalViewModel.updateMessage(id, this)
             }
-
         }
     }
 
@@ -99,8 +87,8 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
             }
         }
 
-        terminalViewModel.insert(Line(0, currTime, null, "welcome (${currTime})"))
-        terminalViewModel.insert(Line(0, System.currentTimeMillis(), "", ""))
+        terminalViewModel.insert(currTime, null, "welcome ($currTime)")
+        terminalViewModel.insert(System.currentTimeMillis(),"","")
 
         registerReceiver(editLineReceiver, IntentFilter(ACTION_ADD_LINE))
     }
@@ -123,13 +111,13 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                         terminalViewModel.updateCommand(lineId, command)
                         cmdTask(lineId, command)
                     }
-                    terminalViewModel.insert(Line(0, System.currentTimeMillis(), "", ""))
+                    terminalViewModel.insert(System.currentTimeMillis(),"", "")
                 }
             }
         }
     }
 
-    private fun getJsonFromAsset(context: Context, fileName: String): String? {
+    private fun getJsonFromAsset(context: Context, fileName: String = "RoK_FangDB.json"): String? {
         return try {
             context.assets.open(fileName).bufferedReader().use {
                 it.readText()

@@ -1,8 +1,7 @@
-package com.rx.starfang.database.room.rok.nlp
+package com.rx.starfang.nlp
 
 import android.util.Log
 import com.rx.starfang.database.room.rok.RokRepository
-import java.util.*
 import java.util.regex.Pattern
 import kotlin.collections.HashMap
 import kotlin.math.max
@@ -14,7 +13,7 @@ class RokLambda {
 
 
     enum class CmdNum {
-        CMDR, SKILL, ATTR, CIV, EQPT, RELIC, CALC, MEMO
+        CMDR, SKILL, ATTR, CIV, EQPT, RELIC, CALC
     }
 
     companion object {
@@ -45,8 +44,7 @@ class RokLambda {
                 "특성" to CmdNum.ATTR,
                 "문명" to CmdNum.CIV,
                 "장비" to CmdNum.EQPT,
-                "계산" to CmdNum.CALC,
-                "메모" to CmdNum.MEMO,
+                "계산" to CmdNum.CALC
             )
         )
 
@@ -64,8 +62,7 @@ class RokLambda {
                 "attr" to CmdNum.ATTR,
                 "civ" to CmdNum.CIV,
                 "eqpt" to CmdNum.EQPT,
-                "calc" to CmdNum.CALC,
-                "memo" to CmdNum.MEMO
+                "calc" to CmdNum.CALC
             )
         )
 

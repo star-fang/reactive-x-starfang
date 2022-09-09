@@ -3,7 +3,6 @@ package com.rx.starfang.database.room.rok
 import android.util.Log
 import androidx.annotation.WorkerThread
 import com.rx.starfang.database.room.rok.entities.*
-import com.rx.starfang.database.room.rok.pojo.SearchPojo
 import java.lang.IllegalArgumentException
 import java.text.MessageFormat
 import kotlin.math.max
@@ -38,10 +37,10 @@ class RokRepository(
         for (name in names.split("\\s+".toRegex())) {
             Log.d("rok_repo", name)
             if(name.length<2) continue
-            val entities: List<SearchPojo> = rokSearchDao.search(name)
 
             val itemSetMap = hashMapOf<Long, Int>()
-            for (entity in entities) {
+            for (entity in rokSearchDao.search(name)) {
+                //todo: 결과물 merge 중복제거, 조합
                 Log.d("rok_repo", "${entity.name} type of ${entity.type}")
                 entityInfoList.add(when (entity.type.lowercase()) {
                     "civ" ->
@@ -191,7 +190,6 @@ class RokRepository(
         }
         return null
     }
-
 
     @WorkerThread
     suspend fun cmdrInfo(id: Long, skillLevels: List<Int>): String? {

@@ -14,11 +14,12 @@ import android.os.Parcelable
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.text.TextUtils
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import com.rx.starfang.RxStarfangApp
-import com.rx.starfang.database.room.rok.nlp.RokLambda
+import com.rx.starfang.nlp.RokLambda
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.*
@@ -66,7 +67,6 @@ class StarfangReplyService : NotificationListenerService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
-
     }
 
     override fun onDestroy() {
@@ -80,32 +80,28 @@ class StarfangReplyService : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
         sbn?.run {
-            val replyAction = NotificationReplier.getNotificationAction(notification) ?: return
+            val replyAction = NotificationReplier.getNotificationAction(notification) ?: return@run
 
             Observable.fromCallable {
 
-                var contentTextChars: CharSequence? =
-                    notification.extras.getCharSequence(Notification.EXTRA_TEXT)
-                contentTextChars =
-                    if (!TextUtils.isEmpty(contentTextChars)) notification.extras.getCharSequence(
-                        Notification.EXTRA_SUMMARY_TEXT
-                    ) else
-                        contentTextChars
+                var contentTextChars: CharSequence? = notification.extras.getCharSequence(Notification.EXTRA_TEXT)
+                if( TextUtils.isEmpty(contentTextChars))
+                    contentTextChars = notification.extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)
                 val contentText: String =
-                    (if (!TextUtils.isEmpty(contentTextChars)) contentTextChars.toString() else null)
-                        ?: return@fromCallable "empty text"
+                    if (!TextUtils.isEmpty(contentTextChars)) contentTextChars.toString() else return@fromCallable "empty text"
                 val sendCat: String =
                     notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString()
                 //val forumName: String = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT).toString()
 
                 val preprocessedContent = RokLambda.preProc(contentText) ?: return@fromCallable "no command"
 
+                Log.d("reply_service", contentText)
                 scope.launch {
-                    val replyList: List<String>? = RokLambda.process(preprocessedContent, sendCat, (application as RxStarfangApp).rokRepository)
+                    val replyList: List<String?>? = RokLambda.process(preprocessedContent, sendCat, (application as RxStarfangApp).rokRepository)
                     if (replyList != null && replyList.isNotEmpty()) {
                         val parcelableReplyAction = ParcelableReplyAction(replyAction, true )
-                        replyList.forEach {
-                            parcelableReplyAction.sendReply(this@StarfangReplyService, it)
+                        replyList.forEach { reply -> if(reply != null)
+                            parcelableReplyAction.sendReply(this@StarfangReplyService, reply)
                         }
                     }
                 }
@@ -173,9 +169,8 @@ class NotificationReplier {
             if (TextUtils.isEmpty(resultKey))
                 return false
 
-            val resultKeyLowerCase = resultKey.lowercase()
             for (keyword in REPLY_KEYWORDS)
-                if (resultKey.contains(keyword))
+                if (resultKey.lowercase().contains(keyword))
                     return true
             return false
         }
@@ -187,32 +182,20 @@ class NotificationReplier {
 class ParcelableReplyAction() : Parcelable {
     var pendingIntent: PendingIntent? = null
     var isQuickReply: Boolean = false
-    lateinit var remoteInputs: ArrayList<RemoteInputParcel>
-    //var sendCat: String? = null
-    //var forumName: String? = null
-    //var content: String? = null
+    private var remoteInputs: MutableList<RemoteInputParcel> = mutableListOf()
 
     constructor(parcel: Parcel) : this() {
         val zeroByte: Byte = 0
         pendingIntent = parcel.readParcelable(PendingIntent::class.java.classLoader)
         isQuickReply = parcel.readByte() != zeroByte
         parcel.readTypedList(remoteInputs, RemoteInputParcel.CREATOR)
-        //sendCat = parcel.readString()
-        //forumName = parcel.readString()
-        //content = parcel.readString()
     }
 
     constructor(
         action: NotificationCompat.Action,
-        //sendCat: String,
-        //forumName: String,
-        //content: String,
         isQuickReply: Boolean
     ) : this() {
         pendingIntent = action.actionIntent
-        //this.sendCat = sendCat
-        //this.forumName = forumName
-        //this.content = content
 
         action.remoteInputs?.run {
             for (i in 0 until size) {
@@ -268,7 +251,7 @@ class ParcelableReplyAction() : Parcelable {
 class RemoteInputParcel() : Parcelable {
     var label: String? = null
     lateinit var resultKey: String
-    lateinit var choices: Array<String?>
+    var choices: Array<String?> = arrayOf()
     var allowFreeFormInput: Boolean = false
     var extras: Bundle? = null
 
@@ -284,19 +267,14 @@ class RemoteInputParcel() : Parcelable {
     constructor(remoteInput: RemoteInput) : this() {
         label = remoteInput.label.toString()
         resultKey = remoteInput.resultKey
-        remoteInput.choices?.let { charSequenceToStringArray(it) }
+        remoteInput.choices?.run {
+            choices = arrayOfNulls(size)
+            for( i in 0 until size)
+                choices[i] = get(i).toString()
+        }
         allowFreeFormInput = remoteInput.allowFreeFormInput
         extras = remoteInput.extras
 
-    }
-
-
-    private fun charSequenceToStringArray(charSequence: Array<CharSequence>) {
-        val size = charSequence.size
-        choices = arrayOfNulls(size)
-        for (i in 0 until size) {
-            choices[i] = charSequence[i].toString()
-        }
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {

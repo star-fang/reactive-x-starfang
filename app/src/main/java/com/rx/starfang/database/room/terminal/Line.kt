@@ -12,7 +12,7 @@ data class Line(
     @ColumnInfo(name = "command")
     val command: String?,
     @ColumnInfo( name = "message")
-    val message: String
+    val message: String?
 )
 
 @Dao

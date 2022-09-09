@@ -1,4 +1,4 @@
-package com.rx.starfang.database.room.rok.nlp
+package com.rx.starfang.nlp
 
 import java.util.*
 

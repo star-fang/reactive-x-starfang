@@ -1,4 +1,4 @@
-package com.rx.starfang.ui.terminal
+package com.rx.starfang.ui.model
 
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -20,8 +20,8 @@ class TerminalViewModel(private val terminalRepo: TerminalRepository, private va
         terminalRepo.updateMessage(id ,message)
     }
 
-    fun insert(line: Line) = viewModelScope.launch {
-        terminalRepo.insertLine(line)
+    fun insert(timeAdded: Long, command: String?, message: String?) = viewModelScope.launch {
+        terminalRepo.insertLine(timeAdded, command, message)
     }
 
     fun insertRokEntity(entity: Any, clazz: KClass<*>) = viewModelScope.launch {

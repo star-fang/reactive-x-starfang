@@ -10,24 +10,25 @@ import com.rx.starfang.database.room.rok.RokSearchDao
 import com.rx.starfang.database.room.rok.RokTypeConverter
 import com.rx.starfang.database.room.rok.cross_ref.*
 import com.rx.starfang.database.room.rok.entities.*
+import com.rx.starfang.database.room.talk.Conversation
 import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.database.room.terminal.LineDao
-import com.rx.starfang.database.room.terminal.Memo
-import com.rx.starfang.database.room.terminal.MemoDao
+import com.rx.starfang.database.room.talk.Memo
+import com.rx.starfang.database.room.talk.TalkDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
     entities = [
-        Line::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class
+        Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class
     ], version = 1
 )
 @TypeConverters(RokTypeConverter::class)
 abstract class StarfangRoomDatabase : RoomDatabase() {
 
     abstract fun lineDao(): LineDao
-    abstract fun memoDao(): MemoDao
+    abstract fun talkDao(): TalkDao
     abstract fun rokSearchDao(): RokSearchDao
     abstract fun attrDao(): AttrDao
     abstract fun civDao(): CivDao
