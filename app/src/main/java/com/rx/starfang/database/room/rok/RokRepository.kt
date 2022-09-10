@@ -31,9 +31,9 @@ class RokRepository(
     }
 
     @WorkerThread
-    suspend fun searchEntities(names: String, skillLevels: List<Int>?): List<String?> {
+    suspend fun searchEntities(names: String, skillLevels: List<Int>?): List<String> {
 
-        val entityInfoList = mutableListOf<String?>()
+        val entityInfoList = mutableListOf<String>()
         for (name in names.split("\\s+".toRegex())) {
             Log.d("rok_repo", name)
             if(name.length<2) continue
@@ -42,7 +42,7 @@ class RokRepository(
             for (entity in rokSearchDao.search(name)) {
                 //todo: 결과물 merge 중복제거, 조합
                 Log.d("rok_repo", "${entity.name} type of ${entity.type}")
-                entityInfoList.add(when (entity.type.lowercase()) {
+                when (entity.type.lowercase()) {
                     "civ" ->
                         (rokDaoMap[Civilization::class] as CivDao).searchCivById(entity.id)?.run {
                             StringBuilder()
@@ -149,8 +149,10 @@ class RokRepository(
 
                         }
                     else -> null
+                }?.run {
+                    entityInfoList.add(this)
                 }
-                )
+
             }
             itemSetMap.entries.forEach { (id, count) ->
                 eqptSetInfo(id, count)?.run {

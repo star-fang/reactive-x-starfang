@@ -7,20 +7,15 @@ import kotlin.collections.HashMap
 import kotlin.math.max
 
 class RokLambda {
-    enum class LangNum {
-        KOR, ENG
-    }
-
 
     enum class CmdNum {
-        CMDR, SKILL, ATTR, CIV, EQPT, RELIC, CALC
+        CMDR, SKILL, ATTR, CIV, EQPT, RELIC
     }
 
     companion object {
 
         private const val debugTag = "rok_lambda"
 
-        private const val catCommand = "냥"
         private const val engCommand = "냥"
 
         val alias = HashMap<String, String>(
@@ -43,8 +38,7 @@ class RokLambda {
                 "스킬" to CmdNum.SKILL,
                 "특성" to CmdNum.ATTR,
                 "문명" to CmdNum.CIV,
-                "장비" to CmdNum.EQPT,
-                "계산" to CmdNum.CALC
+                "장비" to CmdNum.EQPT
             )
         )
 
@@ -61,25 +55,24 @@ class RokLambda {
                 "skill" to CmdNum.SKILL,
                 "attr" to CmdNum.ATTR,
                 "civ" to CmdNum.CIV,
-                "eqpt" to CmdNum.EQPT,
-                "calc" to CmdNum.CALC
+                "eqpt" to CmdNum.EQPT
             )
         )
 
-        fun preProc(contentText: String): String? {
-            val textTrimmed = contentText.trim()
-            if(textTrimmed.length > catCommand.length && textTrimmed.substring(textTrimmed.length- catCommand.length) == catCommand)
-                return textTrimmed.substring(0, textTrimmed.length- catCommand.length).trim()
-            return null
-        }
-
-        suspend fun process(content: String, sendCat: String, rokRepository: RokRepository): List<String?>?{
+        suspend fun process(
+            content: String,
+            sendCat: String,
+            rokRepository: RokRepository
+        ): List<String>? {
             var req = content
-            val langNum: LangNum =
-                if(content.length > engCommand.length && content.substring(content.length - engCommand.length) == engCommand) {
-                    req = content.substring(0, content.length - engCommand.length)
-                    LangNum.ENG
-                } else LangNum.KOR
+            /*
+        val langNum: LangNum =
+            if(content.length > engCommand.length && content.substring(content.length - engCommand.length) == engCommand) {
+                req = content.substring(0, content.length - engCommand.length)
+                LangNum.ENG
+            } else LangNum.KOR
+            &.
+             */
 
             var cmdNum: CmdNum? = null
             cmdMap.keys.forEach { keyLen ->
@@ -92,21 +85,24 @@ class RokLambda {
                 }
             }
 
-            when(cmdNum) {
+            when (cmdNum) {
                 CmdNum.CIV -> {}
                 else -> {
                     var skillLevels: MutableList<Int>? = null
                     val skillLevelPattern = Pattern.compile("[0-9]{4}")
                     val skillLevelMatcher = skillLevelPattern.matcher(req)
-                    if(skillLevelMatcher.find()) {
+                    if (skillLevelMatcher.find()) {
                         skillLevels = mutableListOf()
-                        skillLevelMatcher.group(0)?.forEach {
-                            numChar -> skillLevels.add(Character.getNumericValue(numChar))
+                        skillLevelMatcher.group(0)?.forEach { numChar ->
+                            skillLevels.add(Character.getNumericValue(numChar))
                         }
                     }
 
                     Log.d(debugTag, "command: $req")
-                    return rokRepository.searchEntities(req.replace("[0-9]".toRegex(),"").trim(), skillLevels)
+                    return rokRepository.searchEntities(
+                        req.replace("[0-9]".toRegex(), "").trim(),
+                        skillLevels
+                    )
 
                 }
             }
@@ -114,8 +110,6 @@ class RokLambda {
             return null
         }
     }
-
-
 
 
 }

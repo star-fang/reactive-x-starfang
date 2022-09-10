@@ -19,6 +19,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import com.rx.starfang.RxStarfangApp
+import com.rx.starfang.nlp.NlpPreprocessing
 import com.rx.starfang.nlp.RokLambda
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -91,9 +92,11 @@ class StarfangReplyService : NotificationListenerService() {
                     if (!TextUtils.isEmpty(contentTextChars)) contentTextChars.toString() else return@fromCallable "empty text"
                 val sendCat: String =
                     notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString()
+
+                // notification.`when`
                 //val forumName: String = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT).toString()
 
-                val preprocessedContent = RokLambda.preProc(contentText) ?: return@fromCallable "no command"
+                val preprocessedContent = NlpPreprocessing.preProc(contentText) ?: return@fromCallable "no command"
 
                 Log.d("reply_service", contentText)
                 scope.launch {
