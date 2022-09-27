@@ -8,7 +8,7 @@ import com.rx.starfang.database.room.rok.pojo.CivAllInclusive
 @Entity
 data class Civilization(
     @PrimaryKey val id: Long,
-    @Embedded var name: LanguagePack?,
+    @Embedded(prefix = "civ_") var name: LanguagePack?,
     var comment: LanguagePack?,
     var startingCmdrId: Long // 'civAllInclusive.kt'
     )

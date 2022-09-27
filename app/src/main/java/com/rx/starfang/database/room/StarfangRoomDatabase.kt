@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [
-        Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class
+        Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, SkillNote::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class, SkillNoteCrossRef::class
     ], version = 1
 )
 @TypeConverters(RokTypeConverter::class)
@@ -41,6 +41,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
     abstract fun rarityDao(): RarityDao
     abstract fun relicDao(): RelicDao
     abstract fun skillDao(): SkillDao
+    abstract fun skillNoteDao(): SkillNoteDao
     abstract fun specialUnitDao(): SpecialUnitDao
     abstract fun talentDao(): TalentDao
     abstract fun baseUnitDao(): BaseUnitDao
@@ -51,6 +52,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
     abstract fun eqptMatlXRefDao(): EqptMatlXRefDao
     abstract fun eqptSetAttrXRefDao(): EqptSetAttrXRefDao
     abstract fun relicAttrXRefDao(): RelicAttrXRefDao
+    abstract fun skillNoteXRefDao(): SkillNoteXRefDao
 
     fun rokDaoMap(): HashMap<Any, Any> {
         return HashMap(
@@ -66,6 +68,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
                 Rarity::class to rarityDao(),
                 Relic::class to relicDao(),
                 Skill::class to skillDao(),
+                SkillNote::class to skillNoteDao(),
                 SpecialUnit::class to specialUnitDao(),
                 Talent::class to talentDao(),
                 BaseUnit::class to baseUnitDao(),
@@ -75,8 +78,8 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
                 EqptAttrCrossRef::class to eqptAttrXRefDao(),
                 EqptMatlCrossRef::class to eqptMatlXRefDao(),
                 EqptSetAttrCrossRef::class to eqptSetAttrXRefDao(),
-                RelicAttrCrossRef::class to relicAttrXRefDao()
-
+                RelicAttrCrossRef::class to relicAttrXRefDao(),
+                SkillNoteCrossRef::class to skillNoteXRefDao()
             )
         )
     }
@@ -111,8 +114,11 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
                 super.onCreate(db)
                 INSTANCE?.let { database ->
                     scope.launch(Dispatchers.IO) {
+
                         val lineDao = database.lineDao()
                         lineDao.deleteAll()
+                        lineDao.addLine(Line(0,System.currentTimeMillis(), null, "Database schema version${db.version} loaded"))
+                        lineDao.addLine(Line(0,System.currentTimeMillis(), "", ""))
 
 
                     }

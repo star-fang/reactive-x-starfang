@@ -13,14 +13,14 @@ import kotlinx.coroutines.launch
 class TalkViewModel(private val talkRepo: TalkRepository, private val rokRepo: RokRepository): ViewModel() {
     val allTalks: LiveData<List<Conversation>> = talkRepo.allConversations.asLiveData()
 
-    fun insertTalk(name: String, content: String, isUser: Boolean) = viewModelScope.launch{
+    fun insertTalk(name: String, content: String) = viewModelScope.launch{
         val time: Long = talkRepo.insertConversation(name, content, true)
         NlpPreprocessing.preProc(content)?.run {
-            RokLambda.process(this, name, rokRepo)?.forEach { answer ->
-                talkRepo.insertConversation("냥", answer ?: "?", false)
+            RokLambda.process(trim(), name, rokRepo)?.forEach { answer ->
+                talkRepo.insertConversation("냥", answer, false)
             }
-            TalkLambda.process(this,name,talkRepo, time)?.forEach { answer ->
-                talkRepo.insertConversation("멍", answer ?: "?", false)
+            TalkLambda.process(trim(),name,talkRepo, time)?.forEach { answer ->
+                talkRepo.insertConversation("멍", answer, false)
             }
         }
     }

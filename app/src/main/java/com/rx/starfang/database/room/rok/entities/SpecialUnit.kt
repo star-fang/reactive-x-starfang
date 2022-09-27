@@ -1,6 +1,8 @@
 package com.rx.starfang.database.room.rok.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.rx.starfang.database.room.rok.LanguagePack
@@ -9,6 +11,7 @@ import com.rx.starfang.database.room.rok.RokBaseDao
 @Entity
 data class SpecialUnit(
     @PrimaryKey val id: Long,
+    @Embedded(prefix = "sp_unit_")
     var name: LanguagePack?,
     var civId: Long, // "CivAllInclusive.kt"
     var baseUnitId: Long?, // "SpecializedUnit.kr"

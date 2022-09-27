@@ -38,7 +38,8 @@ class RokLambda {
                 "스킬" to CmdNum.SKILL,
                 "특성" to CmdNum.ATTR,
                 "문명" to CmdNum.CIV,
-                "장비" to CmdNum.EQPT
+                "장비" to CmdNum.EQPT,
+                "유물" to CmdNum.RELIC
             )
         )
 
@@ -59,52 +60,71 @@ class RokLambda {
             )
         )
 
+        private val FOUR_DIGITS_PATTERN = Pattern.compile("[0-9]{4}")
+
         suspend fun process(
-            content: String,
+            content: String, // trimmed
             sendCat: String,
             rokRepository: RokRepository
         ): List<String>? {
-            var req = content
-            /*
-        val langNum: LangNum =
-            if(content.length > engCommand.length && content.substring(content.length - engCommand.length) == engCommand) {
-                req = content.substring(0, content.length - engCommand.length)
-                LangNum.ENG
-            } else LangNum.KOR
-            &.
-             */
+            var req:String = content
+            var fourDigits: MutableList<Int>? = null
+            if(content.length > 6) {
+                val fourDigitsMatcher = FOUR_DIGITS_PATTERN.matcher(content)
+                if (fourDigitsMatcher.find()) {
+                    fourDigits = mutableListOf()
+                    fourDigitsMatcher.group(0)?.forEach { numChar ->
+                        val digitValue:Int = Character.getNumericValue(numChar)
+                        if( digitValue > 5 || digitValue < 0)
+                            return@forEach
+                        fourDigits?.add(Character.getNumericValue(numChar))
+                    }
 
+                    if(fourDigits.size != 4)
+                        fourDigits = null
+                    else
+                        req = req.replace("[0-9]{4}".toRegex()," ")
+                }
+            }
+            Log.d(debugTag, "req: $req")
+
+            val reqNoneDigits = req.replace("[0-9]".toRegex(), " ").trim()
             var cmdNum: CmdNum? = null
+            var digitsAfterCmd: Int? = null
+            var digitBeforeCmd: Int? = null
             cmdMap.keys.forEach { keyLen ->
-                val pivotIndex = max(0, req.length - keyLen)
-                val key = req.substring(pivotIndex)
+                val pivotIndex = max(0, reqNoneDigits.length - keyLen)
+                val key = reqNoneDigits.substring(pivotIndex)
                 cmdMap[keyLen]?.get(key)?.run {
                     cmdNum = this
-                    req = req.substring(0, pivotIndex).trim()
+                    for( i in 0..req.length - keyLen)
+                        if(req.substring(req.length - i - keyLen, req.length - i) == key) {
+                            try {
+                                digitsAfterCmd = req.substring(req.length - i).toInt()
+                            } catch (_: java.lang.NumberFormatException) {
+                            }
+                            req = req.substring(0, req.length - i - keyLen).trim()
+                            break
+                        }
+
                     return@forEach
                 }
             }
 
+
+            if(req.isNotEmpty() && req.last().isDigit()) {
+                digitBeforeCmd = req.last().digitToInt()
+                req = req.substring(0,req.length-1)
+                if(req.isNotEmpty() && req.last().isDigit())
+                    return null
+            }
+
             when (cmdNum) {
+                CmdNum.SKILL ->
+                    return rokRepository.searchSkills(req, fourDigits, digitBeforeCmd, digitsAfterCmd)
                 CmdNum.CIV -> {}
-                else -> {
-                    var skillLevels: MutableList<Int>? = null
-                    val skillLevelPattern = Pattern.compile("[0-9]{4}")
-                    val skillLevelMatcher = skillLevelPattern.matcher(req)
-                    if (skillLevelMatcher.find()) {
-                        skillLevels = mutableListOf()
-                        skillLevelMatcher.group(0)?.forEach { numChar ->
-                            skillLevels.add(Character.getNumericValue(numChar))
-                        }
-                    }
-
-                    Log.d(debugTag, "command: $req")
-                    return rokRepository.searchEntities(
-                        req.replace("[0-9]".toRegex(), "").trim(),
-                        skillLevels
-                    )
-
-                }
+                else ->
+                    return rokRepository.searchEntities(req,fourDigits)
             }
 
             return null

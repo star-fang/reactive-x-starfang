@@ -5,7 +5,7 @@ import androidx.room.TypeConverter
 import com.google.gson.Gson
 
 @ProvidedTypeConverter
-class RokTypeConverter(val gson:Gson = Gson()) {
+class RokTypeConverter(private val gson:Gson = Gson()) {
     @TypeConverter
     fun listOfDoublesToJson(value: List<List<Double>>?): String? {
         return gson.toJson(value)
@@ -37,6 +37,14 @@ class RokTypeConverter(val gson:Gson = Gson()) {
         }
         return resultList
     }
+    /*
+
+    /Users/starfang/AndroidStudioProjects/reactivexstarfang/app/build/tmp/kapt3/stubs/debug/com/rx/starfang/database/room/rok/entities/Skill.java:23: warning: com.rx.starfang.database.room.rok.entities.Skill's coefficient field has type
+    java.util.List<? extends java.util.List<java.lang.Double>> but its getter returns
+    java.util.List<java.util.List<java.lang.Double>>. This mismatch might cause unexpected coefficient values in the database when com.rx.starfang.database.room.rok.entities.Skill is inserted into database.
+    private java.util.List<? extends java.util.List<java.lang.Double>> coefficient;
+                                                                       ^
+     */
 
     @TypeConverter
     fun jsonToListOfDouble(json: String): List<Double> {

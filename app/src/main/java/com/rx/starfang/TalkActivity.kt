@@ -25,13 +25,14 @@ import kotlin.coroutines.CoroutineContext
 
 class TalkActivity : AppCompatActivity(), CoroutineScope {
 
-    lateinit var job: Job
+    private lateinit var job: Job
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
     private lateinit var binding: ActivityTalkBinding
     private lateinit var mNotificationManager: NotificationManager
+    private lateinit var mTalkRecyclerView: RecyclerView
 
     companion object {
         const val CHANNEL_ID = "channel_talk_activity"
@@ -45,6 +46,14 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
+    private fun scrollToBottom() {
+        mTalkRecyclerView.run {
+            adapter?.run {
+                scrollToPosition(itemCount - 1)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -53,9 +62,12 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
         setContentView(binding.root)
 
         val talkAdapter = TalkAdapter()
-        val talkRecyclerView = findViewById<RecyclerView>(R.id.recycler_view_talks)
-        talkRecyclerView.adapter = talkAdapter
-        talkRecyclerView.layoutManager = LinearLayoutManager(this@TalkActivity)
+        mTalkRecyclerView = findViewById(R.id.recycler_view_talks)
+        mTalkRecyclerView.adapter = talkAdapter
+        mTalkRecyclerView.layoutManager = LinearLayoutManager(this@TalkActivity).apply {
+            stackFromEnd = true
+        }
+
 
         talkViewModel.allTalks.observe(this@TalkActivity) { talks ->
             talkAdapter.submitList(talks)
@@ -82,7 +94,6 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -116,8 +127,7 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
                         editTextTalk.setText("")
                         launch {
                             talkViewModel.insertTalk("규규",
-                                editable.toString(),
-                                true
+                                editable.toString()
                             )
 
 
@@ -126,7 +136,5 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
                 }
             }
         }
-
-
     }
 }

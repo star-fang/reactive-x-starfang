@@ -8,7 +8,7 @@ import com.rx.starfang.database.room.rok.pojo.EqptAllInclusive
 @Entity
 data class Equipment(
     @PrimaryKey val id: Long,
-    @Embedded val name: LanguagePack?,
+    @Embedded(prefix = "eqpt_") val name: LanguagePack?,
     val rarityId: Long?, // 'EqptAllInclusive.kt'
     val slotId: Long?, // 'EqptAllInclusive.kt'
     val setId: Long?, // 'EqptAllInclusive.kt'
@@ -19,7 +19,7 @@ data class Equipment(
 
 @Dao
 interface EqptDao: RokBaseDao<Equipment> {
-    @Query("SELECT * FROM Equipment WHERE kor LIKE '%' || :eqptName || '%'")
+    @Query("SELECT * FROM Equipment WHERE eqpt_kor LIKE '%' || :eqptName || '%'")
     suspend fun searchEqptsByName(eqptName: String): List<EqptAllInclusive>
 
     @Query("SELECT * FROM EQUIPMENT WHERE id = :eqptId")

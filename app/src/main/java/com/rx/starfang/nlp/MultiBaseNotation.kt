@@ -29,7 +29,7 @@ class MultiBaseNotation(private val baseList: MutableList<Int>?= null, private v
     @Throws(NullPointerException::class, IndexOutOfBoundsException::class)
     fun getIntegerValue(digits: IntArray): Int {
         if (baseList == null) throw NullPointerException()
-        if (digits.size > baseList!!.size) throw IndexOutOfBoundsException()
+        if (digits.size > baseList.size) throw IndexOutOfBoundsException()
         var sumOfProduct = 0
         for (i in digits.indices) {
             sumOfProduct += digits[i] * productOfBases(0, i)
@@ -77,12 +77,12 @@ class MultiBaseNotation(private val baseList: MutableList<Int>?= null, private v
                 product *= negativeBaseList!![i]
             }
             for (i in 0 until endIndex) {
-                product *= baseList!![i]
+                product *= baseList[i]
             }
         } // if negativeMultiBaseSystem != null && beginIndex < 0
         else {
             for (i in beginIndex until endIndex) {
-                product *= baseList!![i]
+                product *= baseList[i]
             }
         } // else : calculate only positive section
         return product
@@ -110,7 +110,7 @@ class MultiBaseNotation(private val baseList: MutableList<Int>?= null, private v
     @Throws(NullPointerException::class, IndexOutOfBoundsException::class)
     fun getPositiveBaseDigitsCombination(nocBoundary: Int): List<IntArray>? {
         if (baseList == null) throw NullPointerException("please set multi-base system")
-        val noc = productOfBases(0, baseList!!.size)
+        val noc = productOfBases(0, baseList.size)
         if (noc > nocBoundary) return null
         val combinationList: MutableList<IntArray> = ArrayList()
         for (caseIndex in 0 until noc) {

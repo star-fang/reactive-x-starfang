@@ -4,12 +4,14 @@ import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 import com.rx.starfang.database.room.rok.pojo.CmdrAllInclusive
+import com.rx.starfang.database.room.rok.pojo.CmdrWithRarity
+import com.rx.starfang.database.room.rok.pojo.CmdrWithSkills
 
 @Entity
 data class Commander(
     @PrimaryKey val id: Long,
     var rarityId: Long, // 'cmdrAllInclusive.kt', 'CmdrsClassifiedByRarity.kt'
-    @Embedded var name: LanguagePack?,
+    @Embedded(prefix = "cmdr_") var name: LanguagePack?,
     var nickname: LanguagePack?,
     var civId: Long?, // 'cmdrAllInclusive.kt'
     var relicId: Long?, // 'cmdrAllInclusive.kt'
@@ -21,10 +23,19 @@ data class Commander(
 interface CmdrDao: RokBaseDao<Commander> {
 
     @Transaction
-    @Query("SELECT * FROM Commander WHERE kor LIKE '%' || :cmdrName || '%'")
-    suspend fun searchCmdrsByName(cmdrName: String): List<CmdrAllInclusive>
+    @Query("SELECT * FROM Commander WHERE cmdr_kor LIKE '%' || :cmdrName || '%'")
+    suspend fun searchCmdrsByName(cmdrName: String): List<CmdrWithRarity>
+
+
+    @Transaction
+    @Query("SELECT * FROM Commander WHERE cmdr_kor LIKE '%' || :cmdrName || '%'")
+    suspend fun searchCmdrsWithAllInfoByName(cmdrName: String): List<CmdrAllInclusive>
+
+    @Transaction
+    @Query("SELECT * FROM Commander WHERE cmdr_kor LIKE '%' || :cmdrName || '%'")
+    suspend fun searchCmdrsWithSkillsByName(cmdrName: String): List<CmdrWithSkills>
 
     @Transaction
     @Query("SELECT * FROM Commander WHERE id = :cmdrId")
-    suspend fun searchCmdrById(cmdrId: Long): CmdrAllInclusive?
+    suspend fun searchCmdrWithAllInfoById(cmdrId: Long): CmdrAllInclusive?
 }

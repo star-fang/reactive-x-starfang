@@ -1,5 +1,6 @@
 package com.rx.starfang.database.room.rok.cross_ref
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Entity
 import com.rx.starfang.database.room.rok.RokBaseDao
@@ -8,6 +9,7 @@ import com.rx.starfang.database.room.rok.RokBaseDao
 data class EqptAttrCrossRef(
     // 'EquipmentAllInclusive.kt'
     val eqptId: Long,
+    @ColumnInfo(index = true)
     val attrId: Long,
     var attrValues: List<Double>?
 )
