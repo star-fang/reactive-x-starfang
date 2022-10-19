@@ -1,14 +1,10 @@
 package com.rx.starfang.database.room.rok.entities
 
-import androidx.room.ColumnInfo
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
-@Entity
+@Entity(indices = [Index("sp_unit_kor"), Index("sp_unit_eng")])
 data class SpecialUnit(
     @PrimaryKey val id: Long,
     @Embedded(prefix = "sp_unit_")

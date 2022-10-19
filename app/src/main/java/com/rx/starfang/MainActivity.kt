@@ -6,9 +6,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
-import com.rx.starfang.ui.main.SectionsPagerAdapter
+import com.rx.starfang.ui.model.main.SectionsPagerAdapter
 import com.rx.starfang.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -32,5 +30,8 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+
     }
+
+
 }

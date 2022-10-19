@@ -1,6 +1,7 @@
 package com.rx.starfang.nlp
 
 import android.text.TextUtils
+import com.rx.starfang.database.room.memo.MemoRepository
 import com.rx.starfang.database.room.talk.TalkRepository
 import kotlin.collections.HashMap
 import kotlin.math.max
@@ -33,7 +34,7 @@ class TalkLambda {
         suspend fun process(
             content: String,
             sender: String,
-            talkRepository: TalkRepository,
+            memoRepo: MemoRepository,
             time: Long
         ): List<String>?{
             var req = content
@@ -55,7 +56,7 @@ class TalkLambda {
                             val memoName: String = lines[0].trim()
                             return List(1) {
                                 if (lines.size > 1) {
-                                    talkRepository.insertMemo(
+                                    memoRepo.insertMemo(
                                         memoName,
                                         TextUtils.join(
                                             "\r\n",
@@ -65,13 +66,13 @@ class TalkLambda {
                                     )
 
                                 } else {
-                                    talkRepository.deleteMemo(memoName)
+                                    memoRepo.deleteMemo(memoName)
                                 }
                             }
                         }
                     }
                 }
-                else -> return talkRepository.searchMemos(req)
+                else -> return memoRepo.searchMemos(req)
             }
             return null
         }

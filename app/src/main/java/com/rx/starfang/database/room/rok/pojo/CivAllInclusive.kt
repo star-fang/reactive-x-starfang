@@ -26,15 +26,16 @@ data class CivAllInclusive(
     @Relation(
         parentColumn = "id",
         entity = CivAttrCrossRef::class,
-        entityColumn = "civId"
-    ) val attrRefs: List<CivAttrCrossRef>?,
+        entityColumn = "civId",
+        projection = ["attrValues"]
+    ) val attrValuesList: List<List<Double>?>,
 
     @Relation( // 1:n
         entity = SpecialUnit::class,
         parentColumn = "id",
         entityColumn = "civId"
     )
-    val specialUnits: List<UnitSpecialized>?,
+    val specialUnits: List<UnitSpecialized>,
 
     @Relation( // 1:1
         parentColumn = "startingCmdrId",

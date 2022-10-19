@@ -40,10 +40,14 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private val talkViewModel: TalkViewModel by viewModels {
-        TalkViewModelFactory(
-            (application as RxStarfangApp).talkRepository,
-            (application as RxStarfangApp).rokRepository
-        )
+        (application as RxStarfangApp).run {
+            TalkViewModelFactory(
+                talkRepository,
+                rokRepository,
+                memoRepository
+                )
+        }
+
     }
 
     private fun scrollToBottom() {

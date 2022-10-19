@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.rx.starfang.database.room.memo.Memo
+import com.rx.starfang.database.room.memo.MemoDao
 import com.rx.starfang.database.room.rok.RokSearchDao
 import com.rx.starfang.database.room.rok.RokTypeConverter
 import com.rx.starfang.database.room.rok.cross_ref.*
@@ -13,7 +15,6 @@ import com.rx.starfang.database.room.rok.entities.*
 import com.rx.starfang.database.room.talk.Conversation
 import com.rx.starfang.database.room.terminal.Line
 import com.rx.starfang.database.room.terminal.LineDao
-import com.rx.starfang.database.room.talk.Memo
 import com.rx.starfang.database.room.talk.TalkDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [
-        Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, SkillNote::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class, SkillNoteCrossRef::class
+        Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, StatType::class, SkillNote::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class, SkillNoteCrossRef::class
     ], version = 1
 )
 @TypeConverters(RokTypeConverter::class)
@@ -29,6 +30,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
 
     abstract fun lineDao(): LineDao
     abstract fun talkDao(): TalkDao
+    abstract fun memoDao(): MemoDao
     abstract fun rokSearchDao(): RokSearchDao
     abstract fun attrDao(): AttrDao
     abstract fun civDao(): CivDao
@@ -46,6 +48,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
     abstract fun talentDao(): TalentDao
     abstract fun baseUnitDao(): BaseUnitDao
     abstract fun unitTypeDao(): UnitTypeDao
+    abstract fun statTypeDao(): StatTypeDao
     abstract fun civAttrXRefDao(): CivAttrXRefDao
     abstract fun cmdrTalentXRefDao(): CmdrTalentXRefDao
     abstract fun eqptAttrXRefDao(): EqptAttrXRefDao
@@ -73,6 +76,7 @@ abstract class StarfangRoomDatabase : RoomDatabase() {
                 Talent::class to talentDao(),
                 BaseUnit::class to baseUnitDao(),
                 UnitType::class to unitTypeDao(),
+                StatType::class to statTypeDao(),
                 CivAttrCrossRef::class to civAttrXRefDao(),
                 CmdrTalentCrossRef::class to cmdrTalentXRefDao(),
                 EqptAttrCrossRef::class to eqptAttrXRefDao(),

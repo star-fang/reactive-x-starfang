@@ -1,13 +1,10 @@
 package com.rx.starfang.database.room.rok.entities
 
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
-@Entity
+@Entity(indices = [Index("relic_kor"), Index("relic_eng")])
 data class Relic(
     @PrimaryKey val id: Long,
     @Embedded(prefix = "relic_") val name: LanguagePack?

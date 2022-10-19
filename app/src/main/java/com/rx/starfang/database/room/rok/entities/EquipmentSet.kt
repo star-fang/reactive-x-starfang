@@ -5,10 +5,10 @@ import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 import com.rx.starfang.database.room.rok.pojo.EqptSetWithAttrs
 
-@Entity
+@Entity(indices = [Index("eqpt_set_kor"), Index("eqpt_set_eng")])
 data class EquipmentSet(
     @PrimaryKey val id: Long,
-    @Embedded val name: LanguagePack?
+    @Embedded(prefix = "eqpt_set_") val name: LanguagePack?
 )
 
 @Dao

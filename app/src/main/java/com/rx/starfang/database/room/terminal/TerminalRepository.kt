@@ -4,7 +4,7 @@ import androidx.annotation.WorkerThread
 import kotlinx.coroutines.flow.Flow
 
 class TerminalRepository(private val lineDao: LineDao) {
-    val allLines: Flow<List<Line>> = lineDao.getLines(0)
+    //val allLines: Flow<List<Line>> = lineDao.getLines(0)
     fun getCurrLines(currTime:Long) = lineDao.getLines(currTime)
 
     @WorkerThread
@@ -18,8 +18,12 @@ class TerminalRepository(private val lineDao: LineDao) {
     }
 
     @WorkerThread
-    suspend fun insertLine(timeAdded: Long, command:String?, message:String?) {
+    suspend fun insertLine(command:String?, message:String?, timeAdded: Long = System.currentTimeMillis()): Long {
+        return lineDao.addLine(Line(0,timeAdded, command, message))
+    }
 
-        lineDao.addLine(Line(0,timeAdded, command, message))
+    @WorkerThread
+    suspend fun insertMessage(message:String, timeAdded: Long = System.currentTimeMillis()): Long {
+        return lineDao.addLine(Line(0,timeAdded, null, message))
     }
 }

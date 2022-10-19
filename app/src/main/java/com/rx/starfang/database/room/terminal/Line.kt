@@ -18,7 +18,7 @@ data class Line(
 @Dao
 interface LineDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addLine(line: Line)
+    suspend fun addLine(line: Line): Long
 
     @Query("SELECT * FROM lines WHERE timeAdded >= :activityTime ORDER BY timeAdded ASC")
     fun getLines(activityTime: Long): Flow<List<Line>>

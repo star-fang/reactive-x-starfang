@@ -44,6 +44,21 @@ data class CmdrAllInclusive (
     val relic: RelicWithAttrs?
 )
 
+data class CmdrWithTalents(
+    @Embedded val cmdr: Commander,
+
+    @Relation( // m:n
+        parentColumn = "id",
+        entity = Talent::class,
+        entityColumn = "id",
+        associateBy = Junction(
+            value = CmdrTalentCrossRef::class,
+            parentColumn = "cmdrId",
+            entityColumn = "talentId"
+        )
+    ) val talents: List<Talent>?
+)
+
 data class CmdrWithSkills(
     @Embedded val cmdr: Commander,
 

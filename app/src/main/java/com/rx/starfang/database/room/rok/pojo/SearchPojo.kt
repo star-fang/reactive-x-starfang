@@ -10,3 +10,9 @@ data class SearchPojo (
     val propId: Long?
 )
 
+data class KeywordPojo (
+    @ColumnInfo(index = true) val id: Long,
+    val type: String
+)
+
+

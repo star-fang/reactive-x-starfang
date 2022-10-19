@@ -47,6 +47,7 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
                     is RowLineBinding -> {
                         titleView = textLineTitle
                         messageView = textAnswer
+                        textCommand.visibility = if(line.command == null) View.GONE else View.VISIBLE
                         textCommand.text = line.command
                     }
 
@@ -55,6 +56,8 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
                         messageView = textAnswer
                         textEditCommand.clearTextChangedListeners()
                         textEditCommand.setText("")
+                        textEditCommand.requestFocus()
+                        textEditCommand.isEnabled = line.command is String
                         textEditCommand.doAfterTextChanged{ text: Editable? ->
                             text?.run {
                                 if (indexOf("\r") != -1 || indexOf("\n") != -1) {

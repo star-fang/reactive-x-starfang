@@ -4,7 +4,7 @@ import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 
-@Entity
+@Entity(indices = [Index("eqpt_slot_kor"), Index("eqpt_slot_eng")])
 data class EquipmentSlot(
     @PrimaryKey val id: Long,
     @Embedded(prefix = "eqpt_slot_") val name: LanguagePack?

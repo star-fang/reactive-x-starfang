@@ -2,6 +2,7 @@ package com.rx.starfang
 
 import android.app.Application
 import com.rx.starfang.database.room.StarfangRoomDatabase
+import com.rx.starfang.database.room.memo.MemoRepository
 import com.rx.starfang.database.room.rok.RokRepository
 import com.rx.starfang.database.room.talk.TalkRepository
 import com.rx.starfang.database.room.terminal.TerminalRepository
@@ -12,6 +13,7 @@ class RxStarfangApp : Application() {
 
     private val applicationScope = CoroutineScope(SupervisorJob())
     private val roomDatabase by lazy { StarfangRoomDatabase.getDatabase(this, applicationScope)}
+    val memoRepository by lazy { MemoRepository(roomDatabase.memoDao())}
     val talkRepository by lazy { TalkRepository(roomDatabase.talkDao())}
     val terminalRepository by lazy { TerminalRepository(roomDatabase.lineDao()) }
     val rokRepository by lazy { RokRepository(roomDatabase.rokDaoMap(), roomDatabase.rokSearchDao()) }

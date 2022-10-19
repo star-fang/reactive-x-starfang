@@ -24,7 +24,8 @@ data class RelicWithAttrs(
     @Relation(
         parentColumn = "id",
         entity = RelicAttrCrossRef::class,
-        entityColumn = "relicId"
+        entityColumn = "relicId",
+        projection = ["attrValues"]
     )
-    val attrRefs: List<RelicAttrCrossRef>
+    val attrValuesList: List<List<Double>?>
 )

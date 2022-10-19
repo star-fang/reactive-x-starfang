@@ -5,7 +5,7 @@ import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 import com.rx.starfang.database.room.rok.pojo.CivAllInclusive
 
-@Entity
+@Entity(indices = [Index("civ_kor"), Index("civ_eng")])
 data class Civilization(
     @PrimaryKey val id: Long,
     @Embedded(prefix = "civ_") var name: LanguagePack?,

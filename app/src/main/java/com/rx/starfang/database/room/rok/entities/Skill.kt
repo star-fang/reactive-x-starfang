@@ -1,15 +1,11 @@
 package com.rx.starfang.database.room.rok.entities
 
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.Query
+import androidx.room.*
 import com.rx.starfang.database.room.rok.LanguagePack
 import com.rx.starfang.database.room.rok.RokBaseDao
 import com.rx.starfang.database.room.rok.pojo.SkillAllInclusive
 
-@Entity
+@Entity(indices = [Index("skill_kor"), Index("skill_eng")])
 data class Skill(
     @PrimaryKey val id: Long,
     var position: Int,

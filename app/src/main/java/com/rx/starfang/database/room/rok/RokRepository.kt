@@ -5,6 +5,7 @@ import androidx.annotation.WorkerThread
 import com.rx.starfang.database.room.rok.entities.*
 import com.rx.starfang.database.room.rok.pojo.CmdrWithRarity
 import com.rx.starfang.database.room.rok.pojo.CmdrWithSkills
+import com.rx.starfang.database.room.rok.pojo.KeywordPojo
 import com.rx.starfang.database.room.rok.pojo.SearchPojo
 import java.lang.IllegalArgumentException
 import java.text.MessageFormat
@@ -140,26 +141,48 @@ class RokRepository(
     @WorkerThread
     suspend fun searchEntities(names: String, skillLevels: List<Int>?): List<String>? {
         val resultSet = mutableSetOf<SearchPojo>()
+        val keywordSet = mutableSetOf<KeywordPojo>()
         for (name in names.split("\\s+".toRegex())) {
             Log.d("rok_repo", name)
             if (name.length < 2) continue
-            resultSet.addAll(rokSearchDao.search(name))
+            rokSearchDao.searchKeywords(name).let { keywords->
+                if(keywords.isNotEmpty())
+                    keywordSet.addAll(keywords)
+                else
+                    resultSet.addAll(rokSearchDao.search(name))
+            }
         }
-        if (resultSet.isEmpty())
+        if (resultSet.isEmpty() && keywordSet.isEmpty())
             return null
+
+        val unitTypeIdSet: MutableSet<Long> =
+            keywordSet.filter { entity -> entity.type.lowercase() == "unit_type" }.map{it.id}.toMutableSet()
+
+        val rarIdList: List<Long>? =
+            keywordSet.filter { entity -> entity.type.lowercase() == "rar" }.run {
+                return@run if (isEmpty()) null else map { it.id }
+            }
+
+        val statTypeIdList: List<Long>? =
+            keywordSet.filter { entity -> entity.type.lowercase() == "stat_type" }.run {
+                return@run if (isEmpty()) null else map { it.id }
+            }
+
+        val cmdrIdList: List<Long> =
+            resultSet.filter { entity -> entity.type.lowercase() == "cmdr" && (rarIdList == null || entity.propId in rarIdList) }
+                .map { it.id }
+
+        val eqptList: List<SearchPojo> = resultSet.filter { entity ->
+            entity.type.lowercase() == "eqpt"
+        }
 
 
         val entityInfoList = mutableListOf<String>()
-        val rarIdList: List<Long> =
-            resultSet.filter { entity -> entity.type.lowercase() == "rar" }.map { it.id }
-        val cmdrIdList: List<Long> =
-            resultSet.filter { entity -> entity.type.lowercase() == "cmdr" && (rarIdList.isEmpty() || entity.propId in rarIdList) }
-                .map { it.id }
 
-        val eqptSlotIdList: List<Long>? = resultSet.filter {
-                entity -> entity.type.lowercase() == "eqpt_slot"
+        val eqptSlotIdList: List<Long>? = keywordSet.filter { entity ->
+            entity.type.lowercase() == "eqpt_slot"
         }.run {
-            if(isEmpty() && cmdrIdList.isNotEmpty()) {
+            if (isEmpty()) {
                 cmdrIdList.forEach { cmdrId ->
                     cmdrInfo(
                         cmdrId,
@@ -167,9 +190,55 @@ class RokRepository(
                     )?.let { cmdrStr -> entityInfoList.add(cmdrStr) }
                 }
             } else {
-                map{it.id}.let{
-                    //todo: talent, eqpt 연결
-                    return@run it
+
+                cmdrIdList.forEach {  cmdrId ->
+                    (rokDaoMap[Commander::class] as CmdrDao).searchCmdrWithTalentsById(cmdrId)?.talents?.forEach { talent->
+                        talent.relatedUnitTypeId?.let { unitTypeIdSet.add(it) }
+                    }
+                }
+                return@run map { it.id }.onEach { slotId ->
+                    if(eqptList.isNotEmpty()) return@onEach
+                    if (unitTypeIdSet.isEmpty() && statTypeIdList == null) {
+                        (rokDaoMap[Equipment::class] as EqptDao)
+                            .searchEqptsBySlotAndRarityOrNull(slotId, rarIdList).run eqptsRunner@{
+                                if (isEmpty()) return@eqptsRunner null
+                                val eqptsSb = StringBuilder()
+                                val slotName: String? = first().slot?.name?.kor
+                                forEach {
+                                    it.run {
+                                        eqptsSb
+                                            .append("\r\n -")
+                                            .append("${rarity?.name?.eng?.first()?.uppercase() ?: ""} ")
+                                            .append(eqpt.name?.kor ?: "?")
+                                    }
+                                }
+                                return@eqptsRunner slotName + eqptsSb
+                            }?.let { eqptsStr ->
+                                entityInfoList.add(eqptsStr)
+                            }
+
+                    } else {
+                        (rokDaoMap[Attribute::class] as AttrDao)
+                            .searchAttrWithEqptsInSpecificSlot(
+                                slotId,
+                                if(unitTypeIdSet.isEmpty()) null else unitTypeIdSet.toList(),
+                                statTypeIdList,
+                                rarIdList
+                            )?.forEach { attrWithEqpts ->
+                                entityInfoList.add(attrWithEqpts.run {
+                                    val attrSb = StringBuilder()
+                                    attrSb.append("*${attr.form?.kor}")
+                                    for (i in eqpts.indices) {
+                                        eqpts[i].run{
+                                            attrSb.append("\r\n -")
+                                                .append("${rarity?.name?.eng?.first()?.uppercase() ?: ""} ")
+                                                .append(" ${eqpt.name?.kor ?: "?"}: ${attrValuesList[i]}")
+                                        }
+                                    }
+                                    attrSb.toString()
+                                })
+                            }
+                    }
                 }
             }
             return@run null
@@ -180,7 +249,7 @@ class RokRepository(
             entity.type.lowercase() == "eqpt"
                     && (eqptSlotIdList == null || entity.propId in eqptSlotIdList)
         }.run {
-            if(isEmpty()) return@run null
+            if (isEmpty()) return@run null
             val itemSetMap = hashMapOf<Long, Int>()
             map { it.id }.forEach { eqptId ->
                 eqptInfo(eqptId) { setId ->
@@ -189,8 +258,8 @@ class RokRepository(
                     entityInfoList.add(eqptStr)
                 }
             }
-            return@run if(itemSetMap.size > 0) itemSetMap else null
-        }?.let{ itemSetMap ->
+            return@run if (itemSetMap.size > 0) itemSetMap else null
+        }?.let { itemSetMap ->
             eqptSetInfo(itemSetMap) { itemSetInfo ->
                 entityInfoList.add(itemSetInfo)
             }
@@ -221,7 +290,7 @@ class RokRepository(
                     for (i in indices) {
                         attrSb.append("\r\n - ").append(
                             get(i).form?.kor?.let { form ->
-                                attrRefs?.get(i)?.attrValues?.run {
+                                attrValuesList[i]?.run {
                                     try {
                                         MessageFormat.format(form, *toTypedArray())
                                     } catch (e: IllegalArgumentException) {
@@ -236,7 +305,8 @@ class RokRepository(
                     val matlInfoList = mutableListOf<String>()
                     for (i in indices) {
                         matlInfoList.add(
-                            "${get(i).type.name?.kor ?: "?"}${matlRefs?.run { if (i < size) get(i).matlCount else "?" }}"
+                            (get(i).type.name?.kor ?: "?") +
+                                    if (i < matlCounts.size) matlCounts[i] else "?"
                         )
                     }
                     "\r\n${
@@ -263,7 +333,7 @@ class RokRepository(
                     for (i in indices) {
                         attrSb.append("\r\n - ").append(
                             get(i).form?.kor?.let { form ->
-                                attrRefs?.get(i)?.attrValues?.run {
+                                attrValuesList[i]?.run {
                                     try {
                                         MessageFormat.format(
                                             form,
@@ -279,7 +349,7 @@ class RokRepository(
                 })
                 .append("\r\n")
                 .append(startingCommander?.run { "*초기 사령관: ${this.name?.kor ?: "?"}" } ?: "")
-                .append(specialUnits?.run {
+                .append(specialUnits.run {
                     val unitSb = StringBuilder()
                     forEach { specialUnit ->
                         val statMap: HashMap<String, Int?> = hashMapOf(
@@ -335,16 +405,14 @@ class RokRepository(
                 lambda(
                     StringBuilder()
                         .append(eqptSet.name?.kor ?: "?")
-                        .append("$count 개")
-                        .append(attrs?.run {
+                        .append(attrs.run {
                             val attrSb = StringBuilder()
-                            Log.d("rok_repo", attrs.toString())
+                            Log.d("rok_repo", toString())
                             for (i in indices) {
-                                val setCount: Int = attrRefs?.get(i)?.setCount ?: 0
                                 attrSb.append("\r\n -")
-                                    .append(if (setCount > 0) "${setCount}개: " else " ")
-                                    .append(this[i].form?.kor?.let { form ->
-                                        attrRefs?.get(i)?.attrValues?.run {
+                                    .append("${setCounts[i]}개: ")
+                                    .append(get(i).form?.kor?.let { form ->
+                                        attrValuesList[i]?.run {
                                             try {
                                                 MessageFormat.format(form, *toTypedArray())
                                             } catch (e: IllegalArgumentException) {
@@ -352,7 +420,7 @@ class RokRepository(
                                             }
                                         }
                                     })
-                                    .append(if (count > setCount) " [O]" else " [X]")
+                                    .append(if (count >= setCounts[i]) " [O]" else " [X]")
                             }
                             attrSb.toString()
                         }).toString()
@@ -382,7 +450,7 @@ class RokRepository(
                     for (i in attrs.indices) {
                         relicSb.append("\r\n - ").append(attrs[i].form?.kor?.let {
                             try {
-                                attrRefs[i].attrValues?.run {
+                                attrValuesList[i]?.run {
                                     MessageFormat.format(it, *toTypedArray())
                                 }
                             } catch (e: IllegalArgumentException) {

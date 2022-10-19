@@ -4,22 +4,30 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.database.getStringOrNull
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
 import com.rx.starfang.databinding.ActivityTerminalBinding
 import com.rx.starfang.ui.list.adapter.LineAdapter
 import com.rx.starfang.ui.model.TerminalViewModel
 import com.rx.starfang.ui.model.TerminalViewModelFactory
 import kotlinx.coroutines.*
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.IOException
+import java.io.InputStreamReader
 import java.lang.Exception
 import java.lang.reflect.Type
 import kotlin.collections.HashSet
@@ -27,43 +35,216 @@ import kotlin.coroutines.CoroutineContext
 
 class TerminalActivity : AppCompatActivity(), CoroutineScope {
 
-    lateinit var job: Job
+    private lateinit var job: Job
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
     private lateinit var binding: ActivityTerminalBinding
 
+    private val modelParsingGson = GsonBuilder().setLenient()
+        .setExclusionStrategies(object : ExclusionStrategy {
+            override fun shouldSkipField(field: FieldAttributes?): Boolean {
+                if (field != null) {
+                    return field.name.contains("_ignore")
+                }
+                return false
+            }
+
+            override fun shouldSkipClass(clazz: Class<*>?): Boolean {
+                return false
+            }
+        }).registerTypeAdapter(object : TypeToken<Boolean>() {}.type, BooleanDeserializer())
+        .create()
+
     companion object {
+        val TAG: String = TerminalActivity::class.java.simpleName
+        const val RC_MEMO = 8001
+        const val RC_PERMISSION = 7001
+        val MEMO_URI: Uri = Uri.Builder()
+            .scheme("content")
+            .authority("com.starfang")
+            .appendPath("memo")
+            .build()
+        val MEMO_PROJ = arrayOf("name", "when", "content", "sendCat", "forumId")
+
         const val ACTION_ADD_LINE = "ACTION_ADD_LINE"
         const val EXTRAS_ADD_LINE_ID = "EXTRAS_ADD_LINE_ID"
         const val EXTRAS_ADD_LINE_COMMAND = "EXTRAS_ADD_LINE_COMMAND"
-        const val CMD_NOTIFICATION = "/notification"
         const val CMD_CONNECTION = "/connect"
         const val CMD_TALK = "/talk"
+        const val CMD_MEMO = "/memo"
+
+        //const val PERMISSION_RES = android.Manifest.permission.READ_EXTERNAL_STORAGE
+        const val PERMISSION_DYNAMIC_STARFANG_R_DB = "com.starfang.READ_DATABASE"
+        //const val PERMISSION_DYNAMIC_STARFANG_W_DB = "com.starfang.WRITE_DATABASE"
+    }
+
+    private fun checkPermissionAndPerformTriggeredAction(
+        permission: String?,
+        requestCode: Int,
+        trigger: () -> Unit
+    ) {
+        if (permission is String) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    permission
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(permission),
+                    requestCode
+                )
+            } else {
+                trigger()
+            }
+        } else {
+            trigger()
+        }
+
+    }
+
+
+    private fun getMemoList() {
+        val messageLineIdLiveData = MutableLiveData<Long>()
+        val messageLiveData = MutableLiveData("Sync memo from $MEMO_URI")
+        val messageObserver = Observer<String> { message ->
+            val lineIdObserver = Observer<Long> { lineId ->
+                terminalViewModel.updateMessage(lineId, message)
+            }
+            messageLineIdLiveData.observe(this@TerminalActivity, lineIdObserver)
+        }
+        terminalViewModel.insertChangingMessageLine(
+            this@TerminalActivity, messageLineIdLiveData,
+            messageLiveData, messageObserver
+        )
+
+        val cursor = contentResolver.query(
+            MEMO_URI,
+            MEMO_PROJ,
+            "name NOT IN",
+            terminalViewModel.allMemoNames.value?.toTypedArray(),
+            null
+        )
+        if (cursor == null) {
+            messageLiveData.postValue("sync failure: Cursor does not exist")
+        } else {
+            cursor.run {
+                if (count > 0) {
+                    val progressLineIdLiveData = MutableLiveData<Long>()
+                    val progressLiveData = MutableLiveData<String>()
+                    val progressObserver = Observer<String> { message ->
+                        progressLineIdLiveData.value?.let { lineId ->
+                            terminalViewModel.updateMessage(lineId, message)
+                        }
+                    }
+                    terminalViewModel.insertChangingMessageLine(
+                        this@TerminalActivity,
+                        progressLineIdLiveData, progressLiveData, progressObserver
+                    )
+                    var cursorCount = 0
+                    var successCount = 0
+
+                    while (moveToNext()) {
+                        try {
+                            var index = getColumnIndex(MEMO_PROJ[0])
+                            val name = getString(index)
+                            index = getColumnIndex(MEMO_PROJ[1])
+                            val createTime = getLong(index)
+                            index = getColumnIndex(MEMO_PROJ[2])
+                            val content = getString(index)
+                            index = getColumnIndex(MEMO_PROJ[3])
+                            val creator = getStringOrNull(index)
+                            //index = getColumnIndex(MEMO_PROJ[4])
+                            //val forumId = cursor.getLong(index)
+
+                            Log.d(TAG, "memo $name : $content ")
+                            terminalViewModel.insertMemo(
+                                name,
+                                content,
+                                creator ?: "unknown",
+                                createTime
+                            )
+                            ++successCount
+                        } catch (_: Exception) {
+                        }
+
+                        progressLiveData.postValue(
+                            "${((++cursorCount).toDouble() / count.toDouble()) * 100.0}%"
+                        )
+                    }
+
+                    progressLiveData.postValue(
+                        "$successCount memos synchronized (${if (cursorCount > successCount) "${cursorCount - successCount} error(s) occurred" else "no error"})"
+                    )
+                    progressLiveData.removeObserver(progressObserver)
+                } else {
+                    messageLiveData.postValue("All memos are up-to-date")
+                }
+                close()
+            }
+        }
+
+        //messageLiveData.removeObserver(messageObserver)
+
+        terminalViewModel.addCommandLine()
+
+    }
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == RC_MEMO && permissions[0] == PERMISSION_DYNAMIC_STARFANG_R_DB) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getMemoList()
+            } else {
+                terminalViewModel.insert(null, "permission denied(read com.starfang)")
+                terminalViewModel.addCommandLine()
+                Log.d(TAG, "read dynamic starfang permission denied")
+            }
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     private val terminalViewModel: TerminalViewModel by viewModels {
-        TerminalViewModelFactory(
-            (application as RxStarfangApp).terminalRepository,
-            (application as RxStarfangApp).rokRepository
-        )
+        (application as RxStarfangApp).run {
+            TerminalViewModelFactory(
+                memoRepository, terminalRepository, rokRepository
+            )
+        }
+
     }
 
-    fun cmdTask(id: Long, command: String) {
-        launch {
-            when (command) {
-                CMD_NOTIFICATION -> terminalViewModel.updateMessage(id,"notification setting activity launched")
-                CMD_CONNECTION -> {
-                    getJsonFromAsset(this@TerminalActivity)?.run {
-                         jsonToDatabase(this)
-
+    fun cmdTask(command: String) {
+        when (command) {
+            CMD_MEMO ->
+                checkPermissionAndPerformTriggeredAction(
+                    PERMISSION_DYNAMIC_STARFANG_R_DB, RC_MEMO
+                ) {
+                    getMemoList()
+                }
+            CMD_CONNECTION -> {
+                checkPermissionAndPerformTriggeredAction(null, RC_PERMISSION) {
+                    launch {
+                        readJsonFromFile()
+                        //terminalViewModel.updateMessage(lineId, "abc")
+                        terminalViewModel.addCommandLine()
                     }
-                    terminalViewModel.updateMessage(id,"abc")
                 }
-                CMD_TALK -> {
-                    startActivity(Intent(this@TerminalActivity, TalkActivity::class.java))
-                }
+
+
+            }
+            CMD_TALK -> {
+                startActivity(Intent(this@TerminalActivity, TalkActivity::class.java))
+                terminalViewModel.addCommandLine()
+            }
+            else -> {
+                terminalViewModel.addCommandLine()
             }
         }
     }
@@ -82,13 +263,11 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         val currTime = System.currentTimeMillis()
 
         terminalViewModel.getCurrLines(currTime).observe(this) { lines ->
-            lines.let {
-                adapter.submitList(it)
-            }
+            adapter.submitList(lines)
         }
 
-        terminalViewModel.insert(currTime, null, "welcome ($currTime)")
-        terminalViewModel.insert(System.currentTimeMillis(),"","")
+        terminalViewModel.insert(null, "welcome ($currTime)", currTime)
+        terminalViewModel.insert("", "")
 
         registerReceiver(editLineReceiver, IntentFilter(ACTION_ADD_LINE))
     }
@@ -99,7 +278,6 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         unregisterReceiver(editLineReceiver)
     }
 
-
     private val editLineReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d("Terminal Receive", intent.toString())
@@ -107,28 +285,128 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                 ACTION_ADD_LINE -> {
                     val command: String? = intent.extras?.getString(EXTRAS_ADD_LINE_COMMAND)
                     val lineId: Long? = intent.extras?.getLong(EXTRAS_ADD_LINE_ID)
-                    if( command != null && lineId != null) {
+                    if (command != null && lineId != null) {
                         terminalViewModel.updateCommand(lineId, command)
-                        cmdTask(lineId, command)
+                        cmdTask(command)
                     }
-                    terminalViewModel.insert(System.currentTimeMillis(),"", "")
                 }
             }
         }
     }
 
-    private fun getJsonFromAsset(context: Context, fileName: String = "RoK_FangDB.json"): String? {
-        return try {
-            context.assets.open(fileName).bufferedReader().use {
-                it.readText()
+
+    private suspend fun readJsonFromFile(
+        fileName: String = "RoK_FangDB.json"
+    ) {
+
+        val lineIdLiveData = MutableLiveData<Long>()
+        val changingMessageLiveData = MutableLiveData("")
+        val changingMessageObserver = Observer<String> { message ->
+            lineIdLiveData.observe(
+                this@TerminalActivity
+            ) { lineId ->
+                terminalViewModel.updateMessage(lineId, message)
             }
+        }
+        try {
+
+            terminalViewModel.insertChangingMessageLine(
+                this@TerminalActivity,
+                lineIdLiveData,
+                changingMessageLiveData,
+                changingMessageObserver
+            )
+            val jsonReader = JsonReader(
+                InputStreamReader(assets.open(fileName))
+            ).apply {
+                isLenient = true
+            }
+
+            when (jsonReader.peek()) {
+                JsonToken.BEGIN_ARRAY -> {
+                    jsonReader.beginArray()
+                    //todo: arr
+                    jsonReader.endArray()
+                }
+                JsonToken.BEGIN_OBJECT -> {
+                    jsonReader.beginObject()
+
+                    while (jsonReader.hasNext()) {
+                        if (jsonReader.peek() == JsonToken.NAME) {
+                            val modelName: String = jsonReader.nextName()
+                            if (modelName.lowercase() == "version" && jsonReader.peek() == JsonToken.BEGIN_OBJECT) {
+                                jsonReader.beginObject()
+                                while (jsonReader.hasNext()) {
+                                    if (jsonReader.peek() == JsonToken.NAME
+                                        && jsonReader.nextName().lowercase() == "value"
+                                        && jsonReader.peek() == JsonToken.STRING
+                                    ) {
+                                        changingMessageLiveData.postValue("Sync DB version:${jsonReader.nextString()}")
+                                    } else {
+                                        jsonReader.skipValue()
+                                    }
+                                }
+                                jsonReader.endObject()
+                            } else if (jsonReader.peek() == JsonToken.BEGIN_ARRAY) {
+
+                                val modelClazz: Class<*>? = searchDataClazzByTableName(modelName)
+
+                                if (modelClazz != null) {
+
+                                    val progressLineIdLiveData = MutableLiveData<Long>()
+                                    val progressLiveData = MutableLiveData("")
+                                    delay(5)
+                                    val progressObserver = Observer<String> { message ->
+                                        progressLineIdLiveData.observe(
+                                            this@TerminalActivity
+                                        ) { lineId ->
+                                            terminalViewModel.updateMessage(lineId, message)
+                                        }
+                                    }
+
+                                    terminalViewModel.insertChangingMessageLine(
+                                        this@TerminalActivity,
+                                        progressLineIdLiveData, progressLiveData, progressObserver
+                                    )
+                                    jsonReader.beginArray()
+                                    var progress = 0
+                                    while (jsonReader.hasNext()) {
+                                        parseTuple(modelParsingGson, modelClazz, jsonReader)
+                                        progressLiveData.postValue("${modelClazz.simpleName}: ${++progress}")
+                                        delay(1)
+                                    }
+                                    jsonReader.endArray()
+                                    progressLiveData.removeObserver(progressObserver)
+                                } else {
+                                    jsonReader.skipValue()
+                                }
+                            } else {
+                                jsonReader.skipValue()
+                            }
+                        }
+                    }
+                    jsonReader.endObject()
+                }
+                else ->
+                    //todo : error message
+                    return
+            }
+
         } catch (ioException: IOException) {
             ioException.printStackTrace()
-            null
         }
+        changingMessageLiveData.removeObserver(changingMessageObserver)
+
+        /*
+        return try {
+            context.assets.open(fileName)
+                .bufferedReader().use {
+                    it.readText()
+                }*/
+
     }
 
-
+    /*
     private fun createOrUpdateData(clazz: Class<*>, tuple: JSONObject, gson: Gson) {
         try {
             val testObj = gson.fromJson(tuple.toString(), clazz)
@@ -197,7 +475,7 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                 2 -> {
                     when(suffix) {
                         "kor" -> {
-                            
+
                         }
                     }
                 } // 2
@@ -209,40 +487,65 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
 
          */
     }
+    */
 
-    private fun jsonToDatabase(jsonString: String): String {
+    @Throws(IOException::class)
+    private fun parseElement(reader: JsonReader): Any? {
 
-        val gson = GsonBuilder()
-            .setExclusionStrategies(object : ExclusionStrategy {
-                override fun shouldSkipField(field: FieldAttributes?): Boolean {
-                    if (field != null) {
-                        return field.name.contains("_ignore")
+        return when (reader.peek()) {
+            JsonToken.STRING ->
+                Gson().toJson(reader.nextString())
+            JsonToken.BOOLEAN ->
+                reader.nextBoolean()
+            JsonToken.NUMBER ->
+                reader.nextDouble()
+            JsonToken.BEGIN_OBJECT -> {
+                val objMap = mutableMapOf<String, Any>()
+                reader.beginObject()
+                while (reader.hasNext()) {
+                    if (reader.peek() == JsonToken.NAME) {
+                        val key = reader.nextName()
+                        parseElement(reader)?.let { value ->
+                            objMap[key] = value
+                        }
+                    } else {
+                        reader.skipValue()
                     }
-                    return false
                 }
-
-                override fun shouldSkipClass(clazz: Class<*>?): Boolean {
-                    return false
+                reader.endObject()
+                objMap
+            }
+            JsonToken.BEGIN_ARRAY -> {
+                val arrList = mutableListOf<Any?>()
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    arrList.add(parseElement(reader))
                 }
-            }).registerTypeAdapter(object: TypeToken<Boolean>(){}.type, BooleanDeserializer()).create()
-
-        val json = JSONObject(jsonString)
-        if (json.has("Version")) {
-            json.remove("Version")
-        }
-
-
-
-        json.keys().forEach { modelName ->
-            searchDataClazzByTableName(modelName)?.run {
-                val tableData: JSONArray = json[modelName] as JSONArray
-                for (i in 0 until tableData.length()) {
-                    val tuple: JSONObject = tableData.getJSONObject(i)
-                    createOrUpdateData(this, tuple, gson)
-                }
+                reader.endArray()
+                arrList
+            }
+            JsonToken.NULL -> {
+                reader.nextNull()
+                null
+            }
+            else -> {
+                reader.skipValue()
+                null
             }
         }
-        return "read!"
+
+    }
+
+
+    @Throws(IOException::class, JsonSyntaxException::class)
+    private fun parseTuple(gson: Gson, modelClazz: Class<*>, reader: JsonReader) {
+        val elementStr = parseElement(reader).toString().trim()
+        Log.d(TAG, elementStr)
+        val testObj = gson.fromJson(elementStr, modelClazz)
+
+        terminalViewModel.insertRokEntity(testObj, modelClazz.kotlin)
+
+
     }
 
     private fun searchDataClazzByTableName(tableName: String): Class<*>? {
@@ -262,23 +565,25 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
     class BooleanDeserializer : JsonDeserializer<Boolean> {
 
         companion object {
-            @JvmStatic lateinit var TRUE_STRINGS : HashSet<String>
+            @JvmStatic
+            lateinit var TRUE_STRINGS: HashSet<String>
         }
 
         init {
             TRUE_STRINGS = HashSet(listOf("true", "1", "yes"))
         }
+
         override fun deserialize(
             json: JsonElement?,
             typeOfT: Type?,
             context: JsonDeserializationContext?
         ): Boolean {
             json?.run {
-                return if(asJsonPrimitive.isBoolean)
+                return if (asJsonPrimitive.isBoolean)
                     asJsonPrimitive.asBoolean
-                else if(asJsonPrimitive.isNumber)
+                else if (asJsonPrimitive.isNumber)
                     asJsonPrimitive.asNumber.toInt() > 0
-                else if(asJsonPrimitive.isString)
+                else if (asJsonPrimitive.isString)
                     TRUE_STRINGS.contains(asJsonPrimitive.asString.lowercase())
                 else
                     false

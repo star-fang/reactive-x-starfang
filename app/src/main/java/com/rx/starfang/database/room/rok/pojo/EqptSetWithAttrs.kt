@@ -19,12 +19,21 @@ data class EqptSetWithAttrs(
             entityColumn = "attrId"
             )
     )
-    val attrs: List<Attribute>?,
+    val attrs: List<Attribute>,
 
     @Relation(
         parentColumn = "id",
         entity = EqptSetAttrCrossRef::class,
-        entityColumn = "eqptSetId"
+        entityColumn = "eqptSetId",
+        projection = ["setCount"]
     )
-    val attrRefs: List<EqptSetAttrCrossRef>?
+    val setCounts: List<Int>,
+
+    @Relation(
+        parentColumn = "id",
+        entity = EqptSetAttrCrossRef::class,
+        entityColumn = "eqptSetId",
+        projection = ["attrValues"]
+    )
+    val attrValuesList: List<List<Double>?>
 )
