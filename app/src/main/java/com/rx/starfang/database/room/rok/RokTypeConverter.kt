@@ -29,7 +29,7 @@ class RokTypeConverter(private val gson:Gson = Gson()) {
     @TypeConverter
     fun jsonToListOfDoubles(json: String): List<List<Double>> {
         val resultList = mutableListOf<List<Double>>()
-        val arr = gson.fromJson(json,Array<Array<Double>>::class.java)
+        val arr = gson.fromJson(json,Array<DoubleArray>::class.java)
         arr?.run {
             for (i in arr.indices) {
                 resultList.add(arr[i].toList())

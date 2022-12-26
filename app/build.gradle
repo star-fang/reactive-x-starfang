@@ -7,16 +7,18 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.rx.starfang"
         minSdk 24
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -24,11 +26,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
@@ -42,47 +39,87 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    /*
+    packagingOptions {
+        pickFirst 'kotlin/internal/internal.kotlin_builtins'
+        pickFirst 'kotlin/reflect/reflect.kotlin_builtins'
+        pickFirst 'kotlin/kotlin.kotlin_builtins'
+        pickFirst 'kotlin/coroutines/coroutines.kotlin_builtins'
+        pickFirst 'kotlin/ranges/ranges.kotlin_builtins'
+        pickFirst 'kotlin/collections/collections.kotlin_builtins'
+        pickFirst 'kotlin/annotation/annotation.kotlin_builtins'
+    }
+     */
+
+
 }
 
 
 dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //kotlinCompilerClasspath fileTree(dir: 'libs', include: '*.jar')
+    implementation 'androidx.core:core-ktx:1.9.0'
 
-    implementation 'androidx.core:core-ktx:1.8.0'
+    //script engine
+    implementation 'io.apisense:rhino-android:1.0'
+    //implementation 'org.graalvm.js:js-scriptengine:22.3.0'
+    //implementation 'org.graalvm.js:js:22.3.0'
 
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$rootProject.kotlinVersion"
-    //implementation "io.realm.kotlin:library-base:$rootProject.realmKotlinVersion"
-    implementation "io.reactivex.rxjava3:rxandroid:$rootProject.rxAndroidVersion"
-    implementation "io.reactivex.rxjava3:rxkotlin:$rootProject.rxJavaVersion"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.coroutines"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.coroutines"
+    //implementation 'org.openjdk.nashorn:nashorn-core:15.4' // android P min api 28
+
+    //implementation("org.jetbrains.kotlin:kotlin-script-util:$kotlinVersion"){
+    //    exclude group:"org.jetbrains.kotlin", module:"kotlin-daemon-client"
+    //}
+    //implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlinVersion")
+    //implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlinVersion")
+    //implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
+    //implementation("org.jetbrains.kotlin:kotlin-scripting-jsr223:$kotlinVersion")
+    //implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+
+    //coroutines
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
 
     kapt "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0"
+    implementation 'com.google.code.gson:gson:2.10'
+
+
+    //rx
+    implementation "io.reactivex.rxjava3:rxandroid:$rxAndroidVersion"
+    implementation "io.reactivex.rxjava3:rxkotlin:$rxJavaVersion"
+
 
     // Firebase SDK
     implementation platform('com.google.firebase:firebase-bom:30.4.1')
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
+    //implementation "io.realm.kotlin:library-base:$rootProject.realmKotlinVersion"
     // Room components
-    implementation "androidx.room:room-rxjava3:$rootProject.roomVersion"
-    implementation "androidx.room:room-ktx:$rootProject.roomVersion"
-    implementation "androidx.room:room-runtime:$rootProject.roomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.roomVersion"
-    androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
+    implementation "androidx.room:room-rxjava3:$roomVersion"
+    implementation "androidx.room:room-ktx:$roomVersion"
+    implementation "androidx.room:room-runtime:$roomVersion"
+    kapt "androidx.room:room-compiler:$roomVersion"
+    androidTestImplementation "androidx.room:room-testing:$roomVersion"
 
-    implementation "androidx.appcompat:appcompat:$rootProject.appCompatVersion"
-    implementation "androidx.activity:activity-ktx:$rootProject.activityVersion"
+    implementation "androidx.appcompat:appcompat:$appCompatVersion"
+    implementation "androidx.activity:activity-ktx:$activityVersion"
 
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.constraintLayoutVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation "androidx.constraintlayout:constraintlayout:$constraintLayoutVersion"
+    implementation "com.google.android.material:material:$materialVersion"
     implementation "androidx.preference:preference-ktx:1.2.0"
 
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.lifecycleVersion"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$rootProject.lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
 
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxJunitVersion"
-    androidTestImplementation ("androidx.test.espresso:espresso-core:$rootProject.espressoVersion", {
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation("androidx.test.espresso:espresso-core:$espressoVersion", {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }

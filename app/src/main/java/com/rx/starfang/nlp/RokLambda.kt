@@ -9,7 +9,7 @@ import kotlin.math.max
 class RokLambda {
 
     enum class CmdNum {
-        CMDR, SKILL, ATTR, CIV, EQPT, RELIC
+        CMDR, SKILL, ATTR, CIV, EQPT, RELIC, EQUIP
     }
 
     companion object {
@@ -34,12 +34,12 @@ class RokLambda {
 
         private val cmdKor2HashMap = HashMap<String, CmdNum>(
             mapOf(
-                //"장군" to CmdNum.CMDR,
                 "스킬" to CmdNum.SKILL,
                 "특성" to CmdNum.ATTR,
                 "문명" to CmdNum.CIV,
                 "장비" to CmdNum.EQPT,
-                "유물" to CmdNum.RELIC
+                "유물" to CmdNum.RELIC,
+                "장착" to CmdNum.EQUIP
             )
         )
 
@@ -134,11 +134,7 @@ class RokLambda {
 
 }
 
-/**
-
-
-
-
+/*
 fun processReq(req: String, sendCat: String, forumId: Long): List<String>? {
 var req = req
 try {

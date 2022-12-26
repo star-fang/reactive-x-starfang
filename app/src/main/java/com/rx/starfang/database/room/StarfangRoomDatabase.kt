@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 @Database(
     entities = [
         Line::class, Conversation::class, Memo::class, Attribute::class, Civilization::class, Commander::class, Equipment::class, EquipmentSet::class, EquipmentSlot::class, Material::class, MaterialType::class, Rarity::class, Relic::class, Skill::class, SpecialUnit::class, Talent::class, BaseUnit::class, UnitType::class, StatType::class, SkillNote::class, CivAttrCrossRef::class, CmdrTalentCrossRef::class, EqptAttrCrossRef::class, EqptMatlCrossRef::class, EqptSetAttrCrossRef::class, RelicAttrCrossRef::class, SkillNoteCrossRef::class
-    ], version = 1
+    ], version = 1, exportSchema = false
 )
 @TypeConverters(RokTypeConverter::class)
 abstract class StarfangRoomDatabase : RoomDatabase() {

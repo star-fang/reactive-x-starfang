@@ -16,6 +16,7 @@ data class Civilization(
 @Dao
 interface CivDao: RokBaseDao<Civilization> {
 
+    @Transaction
     @Query("SELECT * FROM Civilization WHERE id = :civId")
     suspend fun searchCivById(civId: Long): CivAllInclusive?
 }

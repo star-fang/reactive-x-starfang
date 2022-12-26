@@ -20,16 +20,20 @@ data class Equipment(
 
 @Dao
 interface EqptDao: RokBaseDao<Equipment> {
+    @Transaction
     @Query("SELECT * FROM Equipment WHERE eqpt_kor LIKE '%' || :eqptName || '%'")
     suspend fun searchEqptsByName(eqptName: String): List<EqptAllInclusive>
 
+    @Transaction
     @Query("SELECT * FROM Equipment WHERE id = :eqptId")
     suspend fun searchEqptById(eqptId: Long): EqptAllInclusive?
 
+    @Transaction
     @Query("SELECT * FROM EQUIPMENT WHERE slotId = :slotId AND rarityId IN (:rarityIds)"
     +" ORDER BY rarityId ASC")
     suspend fun searchEqptsBySlotAndRarity(slotId: Long, rarityIds: List<Long>): List<EqptWithSlotAndRarity>
 
+    @Transaction
     @Query("SELECT * FROM EQUIPMENT WHERE slotId = :slotId"
             +" ORDER BY rarityId ASC")
     suspend fun searchEqptsBySlot(slotId: Long): List<EqptWithSlotAndRarity>

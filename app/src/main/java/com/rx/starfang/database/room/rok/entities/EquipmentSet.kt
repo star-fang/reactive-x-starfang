@@ -14,6 +14,7 @@ data class EquipmentSet(
 @Dao
 interface EqptSetDao: RokBaseDao<EquipmentSet> {
 
+    @Transaction
     @Query("SELECT * FROM EquipmentSet WHERE id = :eqptSetId")
     suspend fun searchEqptSetById( eqptSetId: Long ): EqptSetWithAttrs?
 }

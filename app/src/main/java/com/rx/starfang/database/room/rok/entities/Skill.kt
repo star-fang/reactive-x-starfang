@@ -20,6 +20,7 @@ data class Skill(
 
 @Dao
 interface SkillDao: RokBaseDao<Skill> {
+    @Transaction
     @Query("SELECT * FROM Skill WHERE cmdrId = :cmdrId AND position = :pos")
     suspend fun searchOneOfSkillsByCmdrId(cmdrId: Long, pos: Int): SkillAllInclusive?
 }

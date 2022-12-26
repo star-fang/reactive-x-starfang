@@ -57,6 +57,15 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         }).registerTypeAdapter(object : TypeToken<Boolean>() {}.type, BooleanDeserializer())
         .create()
 
+    private val terminalViewModel: TerminalViewModel by viewModels {
+        (application as RxStarfangApp).run {
+            TerminalViewModelFactory(
+                memoRepository, terminalRepository, rokRepository
+            )
+        }
+
+    }
+
     companion object {
         val TAG: String = TerminalActivity::class.java.simpleName
         const val RC_MEMO = 8001
@@ -106,7 +115,7 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
     }
 
 
-    private fun getMemoList() {
+    private suspend fun getMemoList() {
         val messageLineIdLiveData = MutableLiveData<Long>()
         val messageLiveData = MutableLiveData("Sync memo from $MEMO_URI")
         val messageObserver = Observer<String> { message ->
@@ -173,7 +182,10 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                         progressLiveData.postValue(
                             "${((++cursorCount).toDouble() / count.toDouble()) * 100.0}%"
                         )
+                        delay(1)
                     }
+
+                    delay(1000)
 
                     progressLiveData.postValue(
                         "$successCount memos synchronized (${if (cursorCount > successCount) "${cursorCount - successCount} error(s) occurred" else "no error"})"
@@ -190,6 +202,7 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
 
         terminalViewModel.addCommandLine()
 
+
     }
 
 
@@ -199,26 +212,20 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         grantResults: IntArray
     ) {
         if (requestCode == RC_MEMO && permissions[0] == PERMISSION_DYNAMIC_STARFANG_R_DB) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getMemoList()
-            } else {
-                terminalViewModel.insert(null, "permission denied(read com.starfang)")
-                terminalViewModel.addCommandLine()
-                Log.d(TAG, "read dynamic starfang permission denied")
+            launch {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getMemoList()
+                } else {
+                    terminalViewModel.insert(null, "permission denied(read com.starfang)")
+                    terminalViewModel.addCommandLine()
+                    Log.d(TAG, "read dynamic starfang permission denied")
+                }
             }
         }
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private val terminalViewModel: TerminalViewModel by viewModels {
-        (application as RxStarfangApp).run {
-            TerminalViewModelFactory(
-                memoRepository, terminalRepository, rokRepository
-            )
-        }
-
-    }
 
     fun cmdTask(command: String) {
         when (command) {
@@ -226,7 +233,9 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
                 checkPermissionAndPerformTriggeredAction(
                     PERMISSION_DYNAMIC_STARFANG_R_DB, RC_MEMO
                 ) {
-                    getMemoList()
+                    launch {
+                        getMemoList()
+                    }
                 }
             CMD_CONNECTION -> {
                 checkPermissionAndPerformTriggeredAction(null, RC_PERMISSION) {
@@ -258,7 +267,9 @@ class TerminalActivity : AppCompatActivity(), CoroutineScope {
         val adapter = LineAdapter()
         val recyclerView = findViewById<RecyclerView>(R.id.terminal_recycler_view)
         recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = LinearLayoutManager(this).apply {
+            stackFromEnd = true
+        }
 
         val currTime = System.currentTimeMillis()
 

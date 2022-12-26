@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.res.Resources
 import android.icu.text.MessageFormat
 import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -39,7 +38,7 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
         RecyclerView.ViewHolder(binding.root) {
         private lateinit var titleView: AppCompatTextView
         private lateinit var messageView: AppCompatTextView
-        lateinit var textWatcher: TextWatcher
+        //lateinit var textWatcher: TextWatcher
         private val rss: Resources = binding.root.resources
         open fun bind(line: Line) {
             binding.run {
@@ -61,14 +60,16 @@ class LineAdapter : ListAdapter<Line, LineAdapter.LineViewHolder>(LINES_COMPARAT
                         textEditCommand.doAfterTextChanged{ text: Editable? ->
                             text?.run {
                                 if (indexOf("\r") != -1 || indexOf("\n") != -1) {
-                                    val intent = Intent()
-                                    intent.action = TerminalActivity.ACTION_ADD_LINE
-                                    intent.putExtra(
-                                        TerminalActivity.EXTRAS_ADD_LINE_COMMAND,
-                                        replace("\\R".toRegex(), "")
+                                    binding.root.context.sendBroadcast(
+                                        Intent().apply{
+                                            action = TerminalActivity.ACTION_ADD_LINE
+                                            putExtra(
+                                                TerminalActivity.EXTRAS_ADD_LINE_COMMAND,
+                                                replace("\\R".toRegex(), "")
+                                            )
+                                            putExtra(TerminalActivity.EXTRAS_ADD_LINE_ID, line.id)
+                                        }
                                     )
-                                    intent.putExtra(TerminalActivity.EXTRAS_ADD_LINE_ID, line.id)
-                                    binding.root.context.sendBroadcast(intent)
                                 }
                             }
                         }

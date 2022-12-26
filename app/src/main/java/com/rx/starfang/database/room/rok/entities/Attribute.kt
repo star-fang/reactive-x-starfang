@@ -20,6 +20,7 @@ data class Attribute(
 
 @Dao
 interface AttrDao : RokBaseDao<Attribute> {
+    @Transaction
     @Query(
         "SELECT * FROM Attribute WHERE" +
                 " relatedUnitTypeId in (:unitTypeIdList)" +
@@ -27,11 +28,13 @@ interface AttrDao : RokBaseDao<Attribute> {
     )
     suspend fun searchAttrWithEqptsByUnitTypesAndStatTypes(unitTypeIdList: List<Long>, statTypeIdList: List<Long>): List<AttrWithEqpts>
 
+    @Transaction
     @Query(
         "SELECT * FROM Attribute WHERE  relatedUnitTypeId in (:unitTypeIdList)"
     )
     suspend fun searchAttrWithEqptsByUnitTypes(unitTypeIdList: List<Long>): List<AttrWithEqpts>
 
+    @Transaction
     @Query(
         "SELECT * FROM Attribute WHERE  relatedStatTypeId in (:statTypeIdList)"
     )

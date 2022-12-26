@@ -29,27 +29,25 @@ class StarfangReplyService : NotificationListenerService() {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
+
     companion object {
-        const val FOREGROUND_ID = 33
-        const val FOREGROUND_CHANNEL_ID = "starfang_reply_foreground_channel"
-        const val FOREGROUND_CHANNEL_NAME = "Starfang Reply Service"
+        private val TAG: String = StarfangReplyService::class.java.simpleName
+        private const val FOREGROUND_ID = 33
+        private const val FOREGROUND_CHANNEL_ID = "starfang_reply_foreground_channel"
+        private const val FOREGROUND_CHANNEL_NAME = "Starfang Reply Service"
     }
 
     override fun onCreate() {
         super.onCreate()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            startForegroundService()
-        else
-            startForeground(FOREGROUND_ID, Notification())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService()
+        else startForeground(FOREGROUND_ID, Notification())
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private fun startForegroundService() {
         val channel = NotificationChannel(
-            FOREGROUND_CHANNEL_ID,
-            FOREGROUND_CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_NONE
+            FOREGROUND_CHANNEL_ID, FOREGROUND_CHANNEL_NAME, NotificationManager.IMPORTANCE_NONE
         )
         channel.lightColor = Color.BLACK
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
@@ -58,11 +56,10 @@ class StarfangReplyService : NotificationListenerService() {
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
 
-        val notification: Notification = NotificationCompat.Builder(this, FOREGROUND_CHANNEL_ID)
-            .setContentTitle("")
-            .setPriority(NotificationManager.IMPORTANCE_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
+        val notification: Notification =
+            NotificationCompat.Builder(this, FOREGROUND_CHANNEL_ID).setContentTitle("")
+                .setPriority(NotificationManager.IMPORTANCE_MIN)
+                .setCategory(Notification.CATEGORY_SERVICE).build()
         startForeground(FOREGROUND_ID, notification)
     }
 
@@ -85,9 +82,10 @@ class StarfangReplyService : NotificationListenerService() {
 
             Observable.fromCallable {
 
-                var contentTextChars: CharSequence? = notification.extras.getCharSequence(Notification.EXTRA_TEXT)
-                if( TextUtils.isEmpty(contentTextChars))
-                    contentTextChars = notification.extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)
+                var contentTextChars: CharSequence? =
+                    notification.extras.getCharSequence(Notification.EXTRA_TEXT)
+                if (TextUtils.isEmpty(contentTextChars)) contentTextChars =
+                    notification.extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)
                 val contentText: String =
                     if (!TextUtils.isEmpty(contentTextChars)) contentTextChars.toString() else return@fromCallable "empty text"
                 val sendCat: String =
@@ -96,24 +94,29 @@ class StarfangReplyService : NotificationListenerService() {
                 // notification.`when`
                 //val forumName: String = notification.extras.getCharSequence(Notification.EXTRA_SUB_TEXT).toString()
 
-                val preprocessedContent = NlpPreprocessing.preProc(contentText) ?: return@fromCallable "no command"
+                val preprocessedContent =
+                    NlpPreprocessing.preProc(contentText) ?: return@fromCallable "no command"
 
-                Log.d("reply_service", contentText)
+                Log.d(TAG, contentText)
                 scope.launch {
-                    val replyList: List<String?>? = RokLambda.process(preprocessedContent, sendCat, (application as RxStarfangApp).rokRepository)
+                    val replyList: List<String?>? = RokLambda.process(
+                        preprocessedContent, sendCat, (application as RxStarfangApp).rokRepository
+                    )
                     if (replyList != null && replyList.isNotEmpty()) {
-                        val parcelableReplyAction = ParcelableReplyAction(replyAction, true )
-                        replyList.forEach { reply -> if(reply != null)
-                            parcelableReplyAction.sendReply(this@StarfangReplyService, reply)
+                        val parcelableReplyAction = ParcelableReplyAction(replyAction, true)
+                        replyList.forEach { reply ->
+                            if (reply != null) {
+                                delay(1000 + (-100..100).random().toLong())
+                                parcelableReplyAction.sendReply(this@StarfangReplyService, reply)
+                            }
                         }
                     }
                 }
 
                 return@fromCallable "reply"
-            }.observeOn(Schedulers.io())
-                .subscribe {
-                    //ParcelableReplyAction(this, )
-                }
+            }.observeOn(Schedulers.io()).subscribe {
+                Log.d(TAG, it)
+            }
 
         }
     }
@@ -142,8 +145,7 @@ class NotificationReplier {
                 if (action != null && action.remoteInputs != null) {
                     for (x in 1..action.remoteInputs!!.size) {
                         val remoteInput = action.remoteInputs!![x - 1]
-                        if (isKnownReplyKey(remoteInput.resultKey))
-                            return action
+                        if (isKnownReplyKey(remoteInput.resultKey)) return action
                     }
                 }
             }
@@ -153,28 +155,24 @@ class NotificationReplier {
         private fun getWearReplyAction(notification: Notification): NotificationCompat.Action? {
             val wearableExtender = NotificationCompat.WearableExtender(notification)
             for (action in wearableExtender.actions) {
-                action.remoteInputs?.run {
-                    for (i in 0 until size) {
-                        val remoteInput = this[i]
-                        if (isKnownReplyKey(remoteInput.resultKey) || remoteInput.resultKey.lowercase()
-                                .contains(
-                                    INPUT_KEYWORD
-                                )
-                        )
-                            return action
-                    }
-                }
+                if (action.remoteInputs?.run {
+                        forEach { remoteInput ->
+                            if (isKnownReplyKey(remoteInput.resultKey) || remoteInput.resultKey.lowercase()
+                                    .contains(
+                                        INPUT_KEYWORD
+                                    )
+                            ) return@run true
+                        }
+                        false
+                    } == true) return action
             }
             return null
         }
 
         private fun isKnownReplyKey(resultKey: String): Boolean {
-            if (TextUtils.isEmpty(resultKey))
-                return false
+            if (TextUtils.isEmpty(resultKey)) return false
 
-            for (keyword in REPLY_KEYWORDS)
-                if (resultKey.lowercase().contains(keyword))
-                    return true
+            for (keyword in REPLY_KEYWORDS) if (resultKey.lowercase().contains(keyword)) return true
             return false
         }
     }
@@ -183,26 +181,33 @@ class NotificationReplier {
 }
 
 class ParcelableReplyAction() : Parcelable {
-    var pendingIntent: PendingIntent? = null
-    var isQuickReply: Boolean = false
+    private var pendingIntent: PendingIntent? = null
+    private var isQuickReply: Boolean = false
     private var remoteInputs: MutableList<RemoteInputParcel> = mutableListOf()
 
     constructor(parcel: Parcel) : this() {
         val zeroByte: Byte = 0
-        pendingIntent = parcel.readParcelable(PendingIntent::class.java.classLoader)
+        pendingIntent = when {
+            Build.VERSION.SDK_INT >= 33 ->
+                parcel.readParcelable(PendingIntent::class.java.classLoader,PendingIntent::class.java)
+            else ->
+                @Suppress("DEPRECATION")
+                parcel.readParcelable(PendingIntent::class.java.classLoader) as? PendingIntent
+
+        }
+
         isQuickReply = parcel.readByte() != zeroByte
         parcel.readTypedList(remoteInputs, RemoteInputParcel.CREATOR)
     }
 
     constructor(
-        action: NotificationCompat.Action,
-        isQuickReply: Boolean
+        action: NotificationCompat.Action, isQuickReply: Boolean
     ) : this() {
         pendingIntent = action.actionIntent
 
         action.remoteInputs?.run {
-            for (i in 0 until size) {
-                remoteInputs.add(RemoteInputParcel(this[i]))
+            forEach { remoteInput ->
+                remoteInputs.add(RemoteInputParcel(remoteInput))
             }
         }
         this.isQuickReply = isQuickReply
@@ -264,7 +269,13 @@ class RemoteInputParcel() : Parcelable {
         resultKey = parcel.readString().toString()
         choices = parcel.createStringArray() as Array<String?>
         allowFreeFormInput = parcel.readByte() != zeroByte
-        extras = parcel.readParcelable(Bundle::class.java.classLoader)
+        extras = when {
+            Build.VERSION.SDK_INT >= 33 ->
+            parcel.readParcelable(Bundle::class.java.classLoader, Bundle::class.java)
+            else -> @Suppress("DEPRECATION")parcel.readParcelable(Bundle::class.java.classLoader)
+        }
+
+
     }
 
     constructor(remoteInput: RemoteInput) : this() {
@@ -272,8 +283,7 @@ class RemoteInputParcel() : Parcelable {
         resultKey = remoteInput.resultKey
         remoteInput.choices?.run {
             choices = arrayOfNulls(size)
-            for( i in 0 until size)
-                choices[i] = get(i).toString()
+            for (i in indices) choices[i] = get(i).toString()
         }
         allowFreeFormInput = remoteInput.allowFreeFormInput
         extras = remoteInput.extras

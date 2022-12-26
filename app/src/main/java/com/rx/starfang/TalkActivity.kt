@@ -17,10 +17,7 @@ import com.rx.starfang.databinding.ActivityTalkBinding
 import com.rx.starfang.ui.list.adapter.TalkAdapter
 import com.rx.starfang.ui.model.TalkViewModel
 import com.rx.starfang.ui.model.TalkViewModelFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 class TalkActivity : AppCompatActivity(), CoroutineScope {
@@ -45,7 +42,7 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
                 talkRepository,
                 rokRepository,
                 memoRepository
-                )
+            )
         }
 
     }
@@ -88,7 +85,7 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
         }
 
         binding.run {
-            editTextTalk.addTextChangedListener( object : TextWatcher {
+            editTextTalk.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
                     s: CharSequence?,
                     start: Int,
@@ -101,15 +98,15 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
                 }
 
                 override fun afterTextChanged(s: Editable?) {
-                    if(TextUtils.isEmpty(s)) {
+                    if (TextUtils.isEmpty(s)) {
                         clearText.visibility = View.GONE
                         sendTalk.visibility = View.INVISIBLE
                     } else {
-                        if(clearText.visibility != View.VISIBLE)
+                        if (clearText.visibility != View.VISIBLE)
                             clearText.visibility = View.VISIBLE
-                        if(sendTalk.visibility != View.VISIBLE)
+                        if (sendTalk.visibility != View.VISIBLE)
                             sendTalk.visibility = View.VISIBLE
-                        if(!sendTalk.isEnabled)
+                        if (!sendTalk.isEnabled)
                             sendTalk.isEnabled = true
                     }
                 }
@@ -124,18 +121,17 @@ class TalkActivity : AppCompatActivity(), CoroutineScope {
             sendTalk.setOnClickListener {
                 sendTalk.isEnabled = false
                 editTextTalk.text.let { editable ->
-                    if(TextUtils.isEmpty(editable)){
+                    if (TextUtils.isEmpty(editable)) {
                         sendTalk.visibility = View.INVISIBLE
                         clearText.visibility = View.GONE
                     } else {
                         editTextTalk.setText("")
-                        launch {
-                            talkViewModel.insertTalk("규규",
-                                editable.toString()
-                            )
+                        talkViewModel.insertTalk(
+                            "규규",
+                            editable.toString()
+                        )
 
 
-                        }
                     }
                 }
             }
